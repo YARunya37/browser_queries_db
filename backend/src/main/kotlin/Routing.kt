@@ -170,6 +170,31 @@ fun Application.configureRouting() {
                 }
             }
 
+
+            // Соединение с БД
+            // use автоматически закроет соединение после завершения работы
+            createConnection(environment.config).use{ connection ->
+                // Подготавливаем запрос
+
+                val statement = connection.prepareStatement(sqlRequest)
+
+                // Если указан опыт, то передаём параметр в запрос SQL
+                if (experience != null) {
+                    statement.setInt(1, experience)
+                }
+
+                // Выполняем запрос и получаем результат
+                val resultSet = statement.executeQuery()
+
+
+                // TODO Сделать гибкое отображение
+                while (resultSet.next()) {
+                    val fio = resultSet.getString("fio")
+                    val salary = resultSet.getInt("salary")
+
+                    println("$fio: $salary")
+                }
+            }
         }
     }
 }
