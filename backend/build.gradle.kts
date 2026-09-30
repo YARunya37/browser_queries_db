@@ -21,4 +21,6 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+
+    implementation("org.postgresql:postgresql:42.7.13")
 }
