@@ -1,5 +1,6 @@
 package com.example
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -28,7 +29,126 @@ fun Application.configureRouting() {
             // 5. сформировать SQL
             // 6. выполнить SQL
             // 7. вернуть JSON
-            // После успешной реализации разделить отвественность на Repository, Service
+            // После успешной реализации разделить ответственность на Repository, Service
+
+            val allowedFields = mapOf(
+                "id" to "id",
+                "fio" to "fio",
+                "phone" to "phone",
+                "salary" to "salary",
+                "address" to "address",
+                "experience" to "experience"
+            )
+
+
+            // Формирование выбранных полей для запроса
+            // Если указаны определенные поля, то указываем только их. Иначе - все поля
+            val sqlFields: List<String>
+
+            if (fields != null) {
+
+                val requestedFields = fields.split(",")
+
+                val result = mutableListOf<String>()
+
+                for (field in requestedFields) {
+
+                    val fieldName = field.trim()
+
+                    if (!allowedFields.containsKey(fieldName)) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            "Unknown field: $fieldName"
+                        )
+                        return@get
+                    }
+
+                    result.add(allowedFields[fieldName]!!)
+                }
+
+                if (result.isEmpty()) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Fields cannot be empty"
+                    )
+                    return@get
+                }
+
+                sqlFields = result
+
+            } else {
+                sqlFields = listOf("*")
+            }
+
+
+            // Сортировка по определённому полю
+            val sqlSort = sort?.let {
+                allowedFields[it] ?: run {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Unknown sort field: $it"
+                    )
+                    return@get
+                }
+            }
+
+
+            // Направление сортировки
+            var sqlDirection: String? = null
+
+            if (direction != null) {
+
+                sqlDirection = when (direction.lowercase()) {
+                    "asc" -> "ASC"
+                    "desc" -> "DESC"
+                    else -> {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            "Direction must be ASC or DESC"
+                        )
+                        return@get
+                    }
+                }
+            }
+
+            // direction имеет смысл только вместе с sort
+            if (sqlDirection != null && sqlSort == null) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    "Direction requires sort"
+                )
+                return@get
+            }
+            // Значение по умолчанию, если направление не указано
+            else if(sqlSort != null && sqlDirection == null){
+                sqlDirection = "ASC"
+            }
+
+            // Фильтрация по минимальному опыту
+            var experience: Int? = null
+
+            if (experienceMin != null) {
+
+                experience = experienceMin.toIntOrNull()
+
+                if (experience == null) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "experienceMin must be an integer"
+                    )
+                    return@get
+                }
+
+                if (experience < 0) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "experienceMin must be >= 0"
+                    )
+                    return@get
+                }
+            }
+
+
         }
     }
 }
