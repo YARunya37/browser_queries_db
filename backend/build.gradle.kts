@@ -2,6 +2,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(ktorLibs.plugins.ktor)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "com.example"
@@ -23,4 +24,7 @@ dependencies {
     testImplementation(ktorLibs.server.testHost)
 
     implementation("org.postgresql:postgresql:42.7.13")
+
+    implementation("io.ktor:ktor-server-content-negotiation:3.6.0")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.6.0")
 }
