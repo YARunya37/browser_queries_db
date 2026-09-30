@@ -148,6 +148,27 @@ fun Application.configureRouting() {
                 }
             }
 
+            // Собираем SQL-запрос
+            val sqlRequest = buildString {
+                append("SELECT ")
+                append(sqlFields.joinToString(", "))
+                append(" FROM table_kliuchikov")
+
+                if (experience != null) {
+                    // Значение опыта передаём через параметр SQL-запроса
+                    append(" WHERE experience > ?")
+                }
+
+                if (sqlSort != null) {
+                    append(" ORDER BY ")
+                    append(sqlSort)
+
+                    if (sqlDirection != null) {
+                        append(" ")
+                        append(sqlDirection)
+                    }
+                }
+            }
 
         }
     }
