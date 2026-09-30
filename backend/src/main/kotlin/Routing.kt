@@ -173,29 +173,31 @@ fun Application.configureRouting() {
 
             // Соединение с БД
             // use автоматически закроет соединение после завершения работы
+            // .use обязательно у каждого JDBC объекта!!!
             createConnection().use{ connection ->
+
                 // Подготавливаем запрос
+                connection.prepareStatement(sqlRequest).use { statement ->
 
-                val statement = connection.prepareStatement(sqlRequest)
+                    // Если указан опыт, то передаём параметр в запрос SQL
+                    if (experience != null) {
+                        statement.setInt(1, experience)
+                    }
 
-                // Если указан опыт, то передаём параметр в запрос SQL
-                if (experience != null) {
-                    statement.setInt(1, experience)
-                }
+                    // Выполняем запрос и получаем результат
+                    statement.executeQuery().use { resultSet ->
+                        while (resultSet.next()) {
 
-                // Выполняем запрос и получаем результат
-                val resultSet = statement.executeQuery()
+                            for (i in 1..resultSet.metaData.columnCount) {
+                                val columnName = resultSet.metaData.getColumnName(i)
+                                val value = resultSet.getObject(i)
 
-
-                while (resultSet.next()) {
-
-                    for (i in 1..resultSet.metaData.columnCount) {
-                        val columnName = resultSet.metaData.getColumnName(i)
-                        val value = resultSet.getObject(i)
-
-                        println("$columnName = $value")
+                                println("$columnName = $value")
+                            }
+                        }
                     }
                 }
+
             }
             call.respondText("Query is successful")
         }
