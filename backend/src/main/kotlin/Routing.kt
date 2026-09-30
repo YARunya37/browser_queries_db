@@ -173,7 +173,7 @@ fun Application.configureRouting() {
 
             // Соединение с БД
             // use автоматически закроет соединение после завершения работы
-            createConnection(environment.config).use{ connection ->
+            createConnection().use{ connection ->
                 // Подготавливаем запрос
 
                 val statement = connection.prepareStatement(sqlRequest)
