@@ -195,6 +195,7 @@ fun Application.configureRouting() {
                     println("$fio: $salary")
                 }
             }
+            call.respondText("Query is successful")
         }
     }
 }
