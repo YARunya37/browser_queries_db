@@ -187,12 +187,14 @@ fun Application.configureRouting() {
                 val resultSet = statement.executeQuery()
 
 
-                // TODO Сделать гибкое отображение
                 while (resultSet.next()) {
-                    val fio = resultSet.getString("fio")
-                    val salary = resultSet.getInt("salary")
 
-                    println("$fio: $salary")
+                    for (i in 1..resultSet.metaData.columnCount) {
+                        val columnName = resultSet.metaData.getColumnName(i)
+                        val value = resultSet.getObject(i)
+
+                        println("$columnName = $value")
+                    }
                 }
             }
             call.respondText("Query is successful")
