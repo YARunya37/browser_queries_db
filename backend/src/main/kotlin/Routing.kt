@@ -4,6 +4,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 fun Application.configureRouting() {
     routing {
@@ -22,13 +27,6 @@ fun Application.configureRouting() {
                 call.request.queryParameters["experienceMin"]
 
             // TODO
-            // 1. проверить fields на допустимые поля
-            // 2. проверить sort на допустимые варианты сортировок
-            // 3. проверить direction
-            // 4. получить experienceMin
-            // 5. сформировать SQL
-            // 6. выполнить SQL
-            // 7. вернуть JSON
             // После успешной реализации разделить ответственность на Repository, Service
 
             val allowedFields = mapOf(
@@ -120,7 +118,7 @@ fun Application.configureRouting() {
                 return@get
             }
             // Значение по умолчанию, если направление не указано
-            else if(sqlSort != null && sqlDirection == null){
+            else if (sqlSort != null && sqlDirection == null) {
                 sqlDirection = "ASC"
             }
 
@@ -174,7 +172,7 @@ fun Application.configureRouting() {
             // Соединение с БД
             // use автоматически закроет соединение после завершения работы
             // .use обязательно у каждого JDBC объекта!!!
-            createConnection().use{ connection ->
+            createConnection().use { connection ->
 
                 // Подготавливаем запрос
                 connection.prepareStatement(sqlRequest).use { statement ->
@@ -186,20 +184,51 @@ fun Application.configureRouting() {
 
                     // Выполняем запрос и получаем результат
                     statement.executeQuery().use { resultSet ->
-                        while (resultSet.next()) {
+                        // Собираем json-ы
+                        val metadata = resultSet.metaData
+                        val columnCount = metadata.columnCount
 
-                            for (i in 1..resultSet.metaData.columnCount) {
-                                val columnName = resultSet.metaData.getColumnName(i)
-                                val value = resultSet.getObject(i)
+                        val rows = buildList {
+                            while (resultSet.next()) {
 
-                                println("$columnName = $value")
+                                val row = buildMap {
+                                    for (i in 1..columnCount) {
+                                        val columnName = metadata.getColumnLabel(i)
+                                        val value = resultSet.getObject(i)
+
+                                        put(
+                                            columnName,
+                                            toJsonElement(value)
+                                        )
+                                    }
+                                }
+
+                                add(JsonObject(row))
                             }
+
                         }
+
+                        // Отправляем ответ от БД в json
+                        call.respond(JsonArray(rows))
                     }
+
                 }
 
+
             }
-            call.respondText("Query is successful")
         }
+    }
+}
+
+// Функция для корректного приведения типов внутри json
+fun toJsonElement(value: Any?): JsonElement {
+    return when (value) {
+        null -> JsonNull
+
+        is String -> JsonPrimitive(value)
+        is Number -> JsonPrimitive(value)
+        is Boolean -> JsonPrimitive(value)
+
+        else -> JsonPrimitive(value.toString())
     }
 }
