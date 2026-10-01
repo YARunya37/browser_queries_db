@@ -1,5 +1,7 @@
 package com.example
 
+import com.example.repository.EmployeeRepository
+import com.example.service.EmployeeService
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -11,5 +13,9 @@ fun Application.rootModule() {
         json()
     }
 
-    configureRouting()
+    // DI
+    val employeeRepository = EmployeeRepository()
+    val employeeService = EmployeeService(employeeRepository)
+
+    configureRouting(employeeService)
 }
