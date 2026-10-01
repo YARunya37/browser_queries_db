@@ -1,6 +1,8 @@
 package com.example.service
 
+import com.example.json.toJsonArray
 import com.example.repository.EmployeeRepository
+import kotlinx.serialization.json.JsonArray
 
 class EmployeeService(
     private val employeeRepository: EmployeeRepository
@@ -21,7 +23,7 @@ class EmployeeService(
         sort: String?,
         direction: String?,
         experienceMin: String?
-    ): List<Map<String, Any?>> {
+    ): JsonArray {
 
         // Формирование выбранных полей для запроса
         // Если указаны определенные поля, то указываем только их. Иначе - все поля
@@ -44,9 +46,10 @@ class EmployeeService(
             experience = experience
         )
 
-        return employeeRepository.findEmployees(
-            sqlRequest = sqlRequest,
-            experience = experience
+        return toJsonArray(employeeRepository.findEmployees(
+                sqlRequest = sqlRequest,
+                experience = experience
+            )
         )
     }
 
