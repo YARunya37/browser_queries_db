@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.database.createConnection
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.response.*

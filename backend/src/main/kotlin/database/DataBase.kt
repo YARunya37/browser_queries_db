@@ -1,6 +1,5 @@
-package com.example
+package com.example.database
 
-import io.ktor.server.config.*
 import java.sql.Connection
 import java.sql.DriverManager
 
