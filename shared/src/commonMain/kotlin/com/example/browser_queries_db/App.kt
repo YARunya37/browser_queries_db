@@ -2,7 +2,9 @@ package com.example.browser_queries_db
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
 
 import androidx.compose.material3.MaterialTheme
@@ -13,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 @Preview
@@ -47,9 +52,27 @@ fun App() {
                 }
 
                 else -> {
-                    Text(employees.toString())
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        for (employee in employees) {
+                            // Т. к. знаем, что каждый член jsonArray - object, то смело приводим к нему
+                            EmployeeRow(employee.jsonObject)
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EmployeeRow(employee: JsonObject) {
+    Row(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        for ((name, value) in employee) {
+            Text("$name: ${value.jsonPrimitive.content}")
         }
     }
 }
