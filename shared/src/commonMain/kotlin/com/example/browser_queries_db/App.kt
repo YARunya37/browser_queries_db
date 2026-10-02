@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.material3.HorizontalDivider
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,27 +54,12 @@ fun App() {
                 }
 
                 else -> {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        for (employee in employees) {
-                            // Т. к. знаем, что каждый член jsonArray - object, то смело приводим к нему
-                            EmployeeRow(employee.jsonObject)
-                        }
-                    }
+                    // Kotlin не гарантирует, что employees не изменится между проверками(т. к. var)
+                    val employeeData = employees!!
+
+                    EmployeeTable(employeeData)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun EmployeeRow(employee: JsonObject) {
-    Row(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        for ((name, value) in employee) {
-            Text("$name: ${value.jsonPrimitive.content}")
         }
     }
 }
