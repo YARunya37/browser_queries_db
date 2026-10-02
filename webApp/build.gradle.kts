@@ -23,6 +23,10 @@ kotlin {
             implementation(project(":shared"))
 
             implementation(libs.compose.ui)
+
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
     }
 }
