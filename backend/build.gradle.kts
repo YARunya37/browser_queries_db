@@ -24,4 +24,6 @@ dependencies {
 
     implementation("io.ktor:ktor-server-content-negotiation:3.6.0")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.6.0")
+
+    implementation("io.ktor:ktor-server-cors:3.6.0")
 }
