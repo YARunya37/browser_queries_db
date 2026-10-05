@@ -34,6 +34,7 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.engine.defaults)
+            implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

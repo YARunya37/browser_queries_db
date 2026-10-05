@@ -26,7 +26,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -156,8 +160,19 @@ fun App() {
             Button(
                 onClick = {
                     sortDialogVisible = true
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
             ) {
+                Icon(
+                    imageVector = Icons.Default.SortByAlpha,
+                    contentDescription = "Сортировка"
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text("Сортировка")
             }
 
