@@ -29,6 +29,16 @@ fun EmployeeTable(employees: JsonArray) {
         "experience" to "Стаж"
     )
 
+    // Веса для колонок
+    val columnWeights = mapOf(
+        "id" to 0.5f,
+        "fio" to 2f,
+        "phone" to 1.5f,
+        "salary" to 1f,
+        "address" to 2f,
+        "experience" to 0.5f
+    )
+
     // Определяем какие колонки получили
     val columns =
         employees.firstOrNull()
@@ -52,8 +62,8 @@ fun EmployeeTable(employees: JsonArray) {
                 Text(
                     text = columnNames[column] ?: column,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp),
+                        .weight(columnWeights[column] ?: 1f)
+                        .padding(horizontal = 4.dp),
                     style = MaterialTheme.typography.titleSmallEmphasized
                 )
             }
@@ -80,7 +90,7 @@ fun EmployeeTable(employees: JsonArray) {
                             else -> value.jsonPrimitive.content
                         },
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(columnWeights[column] ?: 1f)
                             .padding(horizontal = 8.dp),
                         style = MaterialTheme.typography.bodyMediumEmphasized
                     )
