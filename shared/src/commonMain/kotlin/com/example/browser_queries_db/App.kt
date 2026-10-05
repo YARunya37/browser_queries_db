@@ -94,7 +94,7 @@ fun App() {
                         scope.launch {
                             executeQuery(
                                 EmployeeQuery(
-                                    fields = listOf("fio", "address", "experience"),
+                                    fields = listOf("fio", "address"),
                                     sort = "address"
                                 )
                             )
@@ -109,7 +109,7 @@ fun App() {
                         scope.launch {
                             executeQuery(
                                 EmployeeQuery(
-                                    fields = listOf("fio", "address"),
+                                    fields = listOf("fio", "address", "experience"),
                                     experienceMin = 4
                                 )
                             )
