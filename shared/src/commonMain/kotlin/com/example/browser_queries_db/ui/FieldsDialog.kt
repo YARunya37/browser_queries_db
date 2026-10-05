@@ -18,6 +18,7 @@ fun FieldsDialog(
     onDismiss: () -> Unit,
     onApply: (List<String>) -> Unit
 ) {
+    // Отсортированные поля
     val fields = listOf(
         "fio" to "ФИО",
         "phone" to "Телефон",
@@ -26,6 +27,7 @@ fun FieldsDialog(
         "experience" to "Стаж"
     )
 
+    // Поля выбранные пользователем
     var selectedFields by remember {
         mutableStateOf(
             setOf(
@@ -48,16 +50,15 @@ fun FieldsDialog(
         text = {
             Column {
                 fields.forEach { (field, displayName) ->
-                    val selected = field in selectedFields
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = selected,
-                            onCheckedChange = {
+                            // Если поле выбрано пользователем
+                            checked = field in selectedFields,
+                            onCheckedChange = { checked ->
                                 selectedFields =
-                                    if (it) {
+                                    if (checked) {
                                         selectedFields + field
                                     } else {
                                         selectedFields - field
@@ -74,7 +75,16 @@ fun FieldsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onApply(selectedFields.toList())
+                    // Отбираем поля в правильной последовательности. Если поле выбрано, то оно попадает в список
+                    val orderedFields = fields
+                        .filter { (field, _) ->
+                            field in selectedFields
+                        }
+                        .map { (field, _) ->
+                            field
+                        }
+
+                    onApply(orderedFields)
                 }
             ) {
                 Text("Применить")
