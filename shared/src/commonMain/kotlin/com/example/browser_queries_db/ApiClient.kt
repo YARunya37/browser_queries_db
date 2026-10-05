@@ -24,8 +24,36 @@ val httpClient = HttpClient {
 }
 
 
-suspend fun loadEmployees(): JsonArray {
-    return httpClient.get(
-        "http://localhost:8080/employees?fields=fio,phone,salary"
-    ).body<JsonArray>()
+suspend fun loadEmployees(query: EmployeeQuery): JsonArray {
+    val url = buildEmployeeUrl(query)
+
+    return httpClient
+        .get(url)
+        .body()
+}
+
+fun buildEmployeeUrl(query: EmployeeQuery): String {
+    val params = mutableListOf<String>()
+
+    query.fields?.let {
+        params += "fields=${it.joinToString(",")}"
+    }
+
+    query.sort?.let {
+        params += "sort=$it"
+    }
+
+    query.direction?.let {
+        params += "direction=$it"
+    }
+
+    query.experienceMin?.let {
+        params += "experienceMin=$it"
+    }
+
+    return if (params.isEmpty()) {
+        "http://localhost:8080/employees"
+    } else {
+        "http://localhost:8080/employees?${params.joinToString("&")}"
+    }
 }

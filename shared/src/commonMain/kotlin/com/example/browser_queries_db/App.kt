@@ -41,7 +41,7 @@ fun App() {
         // Unit здесь означает: запустить один раз для данного экземпляра App.
         LaunchedEffect(Unit) {
             try {
-                employees = loadEmployees()
+                employees = loadEmployees(EmployeeQuery())
             } catch (e: Exception) {
                 error = e.message
             }
