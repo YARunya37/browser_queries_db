@@ -85,7 +85,7 @@ fun App() {
         // Контент экрана
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(MaterialTheme.colorScheme.background)
                 .safeContentPadding()
                 .fillMaxSize()
                 .verticalScroll(scrollState),
