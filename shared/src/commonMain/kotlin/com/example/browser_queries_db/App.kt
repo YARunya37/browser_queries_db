@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.EmployeeQuery
 import com.example.browser_queries_db.ui.EmployeeTable
+import com.example.browser_queries_db.ui.ExperienceDialog
 import com.example.browser_queries_db.ui.FieldsDialog
 import com.example.browser_queries_db.ui.QuickQueryButtons
 import com.example.browser_queries_db.ui.SortDialog
@@ -108,22 +109,22 @@ fun App() {
         }
 
         if (experienceDialogVisible) {
-//            ExperienceDialog(
-//                onDismiss = {
-//                    experienceDialogVisible = false
-//                },
-//                onApply = { experience ->
-//                    experienceDialogVisible = false
-//
-//                    scope.launch {
-//                        executeQuery(
-//                            EmployeeQuery(
-//                                experienceMin = experience
-//                            )
-//                        )
-//                    }
-//                }
-//            )
+            ExperienceDialog(
+                onDismiss = {
+                    experienceDialogVisible = false
+                },
+                onApply = { experience ->
+                    experienceDialogVisible = false
+
+                    scope.launch {
+                        executeQuery(
+                            EmployeeQuery(
+                                experienceMin = experience
+                            )
+                        )
+                    }
+                }
+            )
         }
 
         // ОСНОВНОЙ ЭКРАН
