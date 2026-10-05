@@ -5,6 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.JsonArray
 
@@ -25,35 +26,22 @@ val httpClient = HttpClient {
 
 
 suspend fun loadEmployees(query: EmployeeQuery): JsonArray {
-    val url = buildEmployeeUrl(query)
+    return httpClient.get("http://localhost:8080/employees") {
+        // Формируем параметры, если они есть
+        query.fields?.let {
+            parameter("fields", it.joinToString(","))
+        }
 
-    return httpClient
-        .get(url)
-        .body()
-}
+        query.sort?.let {
+            parameter("sort", it)
+        }
 
-fun buildEmployeeUrl(query: EmployeeQuery): String {
-    val params = mutableListOf<String>()
+        query.direction?.let {
+            parameter("direction", it)
+        }
 
-    query.fields?.let {
-        params += "fields=${it.joinToString(",")}"
-    }
-
-    query.sort?.let {
-        params += "sort=$it"
-    }
-
-    query.direction?.let {
-        params += "direction=$it"
-    }
-
-    query.experienceMin?.let {
-        params += "experienceMin=$it"
-    }
-
-    return if (params.isEmpty()) {
-        "http://localhost:8080/employees"
-    } else {
-        "http://localhost:8080/employees?${params.joinToString("&")}"
-    }
+        query.experienceMin?.let {
+            parameter("experienceMin", it)
+        }
+    }.body()
 }
