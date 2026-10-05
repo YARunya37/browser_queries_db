@@ -68,6 +68,68 @@ fun App() {
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Кнопки запросов
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            executeQuery(
+                                EmployeeQuery(
+                                    fields = listOf("fio", "phone", "salary")
+                                )
+                            )
+                        }
+                    }
+                ) {
+                    Text("Зарплата сотрудников")
+                }
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            executeQuery(
+                                EmployeeQuery(
+                                    fields = listOf("fio", "address", "experience"),
+                                    sort = "address"
+                                )
+                            )
+                        }
+                    }
+                ) {
+                    Text("Отсортировать по адресу")
+                }
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            executeQuery(
+                                EmployeeQuery(
+                                    fields = listOf("fio", "address"),
+                                    experienceMin = 4
+                                )
+                            )
+                        }
+                    }
+                ) {
+                    Text("Стаж от 4 лет")
+                }
+            }
+
+            // Заголовок таблицы
+            Text(text = "Таблица: Сотрудники",
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            // Отображаем состояние таблицы
             when {
                 error != null -> {
                     Text("Error: $error")
@@ -78,69 +140,9 @@ fun App() {
                 }
 
                 else -> {
-                    // Кнопки запросов
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    executeQuery(
-                                        EmployeeQuery(
-                                            fields = listOf("fio", "phone", "salary")
-                                        )
-                                    )
-                                }
-                            }
-                        ) {
-                            Text("Зарплата сотрудников")
-                        }
-
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    executeQuery(
-                                        EmployeeQuery(
-                                            fields = listOf("fio", "address", "experience"),
-                                            sort = "address"
-                                        )
-                                    )
-                                }
-                            }
-                        ) {
-                            Text("Отсортировать по адресу")
-                        }
-
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    executeQuery(
-                                        EmployeeQuery(
-                                            fields = listOf("fio", "address"),
-                                            experienceMin = 4
-                                        )
-                                    )
-                                }
-                            }
-                        ) {
-                            Text("Стаж от 4 лет")
-                        }
-                    }
 
                     // Kotlin не гарантирует, что employees не изменится между проверками(т. к. var)
                     val employeeData = employees!!
-
-                    // Заголовок таблицы
-                    Text(text = "Таблица: Сотрудники",
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
 
                     // Таблица
                     EmployeeTable(employeeData)
