@@ -19,6 +19,16 @@ import kotlinx.serialization.json.jsonPrimitive
 @Composable
 fun EmployeeTable(employees: JsonArray) {
 
+    // Названия колонок для отображения в UI
+    val columnNames = mapOf(
+        "id" to "ID",
+        "fio" to "ФИО",
+        "phone" to "Телефон",
+        "salary" to "Зарплата",
+        "address" to "Адрес",
+        "experience" to "Стаж"
+    )
+
     // Определяем какие колонки получили
     val columns =
         employees.firstOrNull()
@@ -40,7 +50,7 @@ fun EmployeeTable(employees: JsonArray) {
         ) {
             for (column in columns) {
                 Text(
-                    text = column,
+                    text = columnNames[column] ?: column,
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
