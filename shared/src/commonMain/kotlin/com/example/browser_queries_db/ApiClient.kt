@@ -1,5 +1,6 @@
 package com.example.browser_queries_db
 
+import com.example.browser_queries_db.model.EmployeeQuery
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout

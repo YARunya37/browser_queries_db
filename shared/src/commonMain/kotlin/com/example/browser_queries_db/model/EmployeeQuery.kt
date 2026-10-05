@@ -1,4 +1,4 @@
-package com.example.browser_queries_db
+package com.example.browser_queries_db.model
 
 data class EmployeeQuery(
     val fields: List<String>? = null,

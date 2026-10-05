@@ -10,29 +10,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.TableView
+import androidx.compose.material.icons.filled.ViewColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.browser_queries_db.model.EmployeeQuery
+import com.example.browser_queries_db.ui.EmployeeTable
+import com.example.browser_queries_db.ui.SortDialog
 import kotlinx.coroutines.launch
 
 @Composable
@@ -42,7 +43,11 @@ fun App() {
         var employees by remember { mutableStateOf<JsonArray?>(null) }
         var error by remember { mutableStateOf<String?>(null) }
         val scrollState = rememberScrollState()
+
+        var fieldsDialogVisible by remember { mutableStateOf(false) }
         var sortDialogVisible by remember { mutableStateOf(false) }
+        var experienceDialogVisible by remember { mutableStateOf(false) }
+
         val scope = rememberCoroutineScope()
 
         // Локальная функция для вызова запросов
@@ -157,25 +162,92 @@ fun App() {
             )
 
             // Панель управления таблицей
-            Button(
-                onClick = {
-                    sortDialogVisible = true
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.SortByAlpha,
-                    contentDescription = "Сортировка"
-                )
+                // Исходная таблица
+                Button(
+                    onClick = {
+                        scope.launch {
+                            executeQuery(EmployeeQuery())
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.TableView,
+                        contentDescription = "Все сотрудники"
+                    )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                Text("Сортировка")
+                    Text("Все сотрудники")
+                }
+
+                // Выбор отображаемых полей
+                Button(
+                    onClick = {
+                        fieldsDialogVisible = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ViewColumn,
+                        contentDescription = "Поля"
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text("Поля")
+                }
+
+                // Сортировка
+                Button(
+                    onClick = {
+                        sortDialogVisible = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SortByAlpha,
+                        contentDescription = "Сортировка"
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text("Сортировка")
+                }
+
+                // Фильтр по стажу
+                Button(
+                    onClick = {
+                        experienceDialogVisible = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Стаж"
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text("Стаж")
+                }
             }
-
             // Отображаем состояние таблицы
             when {
                 error != null -> {
