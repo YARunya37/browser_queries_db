@@ -42,12 +42,15 @@ fun App() {
 
         var experienceDialogVisible by remember { mutableStateOf(false) }
 
+        var currentQuery by remember { mutableStateOf(EmployeeQuery()) }
+
         val scrollState = rememberScrollState()
         val scope = rememberCoroutineScope()
 
 
         // Локальная функция для вызова запросов к БД
         suspend fun executeQuery(query: EmployeeQuery) {
+            currentQuery = query
             employees = null
 
             try {
@@ -79,7 +82,7 @@ fun App() {
 
                     scope.launch {
                         executeQuery(
-                            EmployeeQuery(
+                            currentQuery.copy(
                                 sort = field,
                                 direction = direction
                             )
@@ -99,7 +102,7 @@ fun App() {
 
                     scope.launch {
                         executeQuery(
-                            EmployeeQuery(
+                            currentQuery.copy(
                                 fields = fields
                             )
                         )
@@ -118,7 +121,7 @@ fun App() {
 
                     scope.launch {
                         executeQuery(
-                            EmployeeQuery(
+                            currentQuery.copy(
                                 experienceMin = experience
                             )
                         )
