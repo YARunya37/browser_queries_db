@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.EmployeeQuery
 import com.example.browser_queries_db.ui.EmployeeTable
+import com.example.browser_queries_db.ui.FieldsDialog
 import com.example.browser_queries_db.ui.QuickQueryButtons
 import com.example.browser_queries_db.ui.SortDialog
 import com.example.browser_queries_db.ui.TableControlPanel
@@ -88,22 +89,22 @@ fun App() {
         }
 
         if (fieldsDialogVisible) {
-//            FieldsDialog(
-//                onDismiss = {
-//                    fieldsDialogVisible = false
-//                },
-//                onApply = { fields ->
-//                    fieldsDialogVisible = false
-//
-//                    scope.launch {
-//                        executeQuery(
-//                            EmployeeQuery(
-//                                fields = fields
-//                            )
-//                        )
-//                    }
-//                }
-//            )
+            FieldsDialog(
+                onDismiss = {
+                    fieldsDialogVisible = false
+                },
+                onApply = { fields ->
+                    fieldsDialogVisible = false
+
+                    scope.launch {
+                        executeQuery(
+                            EmployeeQuery(
+                                fields = fields
+                            )
+                        )
+                    }
+                }
+            )
         }
 
         if (experienceDialogVisible) {
