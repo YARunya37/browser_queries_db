@@ -20,6 +20,8 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 @Preview
@@ -27,6 +29,7 @@ fun App() {
     MaterialTheme {
         var employees by remember { mutableStateOf<JsonArray?>(null) }
         var error by remember { mutableStateOf<String?>(null) }
+        val scrollState = rememberScrollState()
 
         // Unit здесь означает: запустить один раз для данного экземпляра App.
         LaunchedEffect(Unit) {
@@ -41,7 +44,8 @@ fun App() {
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .safeContentPadding()
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when {
