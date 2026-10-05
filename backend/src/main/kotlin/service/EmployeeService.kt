@@ -161,7 +161,7 @@ class EmployeeService(
 
             if (experience != null) {
                 // Значение опыта передаём через параметр SQL-запроса
-                append(" WHERE experience > ?")
+                append(" WHERE experience >= ?")
             }
 
             if (sqlSort != null) {
