@@ -65,7 +65,7 @@ fun App() {
                 }
 
                 else -> {
-                    // Конпки запросов
+                    // Кнопки запросов
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
