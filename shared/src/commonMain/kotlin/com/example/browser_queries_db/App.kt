@@ -38,6 +38,7 @@ fun App() {
         var employees by remember { mutableStateOf<JsonArray?>(null) }
         var error by remember { mutableStateOf<String?>(null) }
         val scrollState = rememberScrollState()
+        var sortDialogVisible by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
         // Локальная функция для вызова запросов
@@ -60,6 +61,28 @@ fun App() {
             }
         }
 
+        // Отображение диалога сортировки
+        if (sortDialogVisible) {
+            SortDialog(
+                onDismiss = {
+                    sortDialogVisible = false
+                },
+                onApply = { field, direction ->
+                    sortDialogVisible = false
+
+                    scope.launch {
+                        executeQuery(
+                            EmployeeQuery(
+                                sort = field,
+                                direction = direction
+                            )
+                        )
+                    }
+                }
+            )
+        }
+
+        // Контент экрана
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primaryContainer)
@@ -128,6 +151,15 @@ fun App() {
                     .fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
+
+            // Панель управления таблицей
+            Button(
+                onClick = {
+                    sortDialogVisible = true
+                }
+            ) {
+                Text("Сортировка")
+            }
 
             // Отображаем состояние таблицы
             when {
