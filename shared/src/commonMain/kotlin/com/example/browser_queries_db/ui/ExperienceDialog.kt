@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 @Composable
 fun ExperienceDialog(
     onDismiss: () -> Unit,
-    onApply: (Int) -> Unit
+    onApply: (Int?) -> Unit
 ) {
     var experience by remember {
         mutableStateOf("")
@@ -41,9 +41,9 @@ fun ExperienceDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    experience.toIntOrNull()?.let {
-                        onApply(it)
-                    }
+                    onApply(
+                        experience.toIntOrNull()?.takeIf { it > 0 }
+                    )
                 }
             ) {
                 Text("Применить")
