@@ -54,7 +54,7 @@ fun EmployeeTable(employees: JsonArray) {
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleSmallEmphasized
                 )
             }
         }
@@ -68,7 +68,7 @@ fun EmployeeTable(employees: JsonArray) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 10.dp)
+                    .padding(vertical = 5.dp)
             ) {
                 // Пишем значения для каждой колонки
                 for (column in columns) {
@@ -81,7 +81,8 @@ fun EmployeeTable(employees: JsonArray) {
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMediumEmphasized
                     )
                 }
             }
