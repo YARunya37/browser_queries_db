@@ -1,0 +1,102 @@
+package com.example.browser_queries_db.ui
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.TableView
+import androidx.compose.material.icons.filled.ViewColumn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun TableControlPanel(
+    onReset: () -> Unit,
+    onFieldsClick: () -> Unit,
+    onSortClick: () -> Unit,
+    onExperienceClick: () -> Unit
+) {
+    Row {
+        Button(
+            onClick = onReset,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.TableView,
+                contentDescription = "Все сотрудники"
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text("Все сотрудники")
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Button(
+            onClick = onFieldsClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.ViewColumn,
+                contentDescription = "Поля"
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text("Поля")
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Button(
+            onClick = onSortClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.SortByAlpha,
+                contentDescription = "Сортировка"
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text("Сортировка")
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Button(
+            onClick = onExperienceClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.FilterList,
+                contentDescription = "Стаж"
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text("Стаж")
+        }
+    }
+}
