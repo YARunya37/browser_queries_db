@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 @Preview
@@ -37,6 +38,18 @@ fun App() {
         var employees by remember { mutableStateOf<JsonArray?>(null) }
         var error by remember { mutableStateOf<String?>(null) }
         val scrollState = rememberScrollState()
+        val scope = rememberCoroutineScope()
+
+        // Локальная функция для вызова запросов
+        suspend fun executeQuery(query: EmployeeQuery) {
+            employees = null
+            try {
+                employees = loadEmployees(query)
+                error = null
+            } catch (e: Exception) {
+                error = e.message
+            }
+        }
 
         // Unit здесь означает: запустить один раз для данного экземпляра App.
         LaunchedEffect(Unit) {
@@ -74,7 +87,13 @@ fun App() {
                     ) {
                         Button(
                             onClick = {
-                                // TODO
+                                scope.launch {
+                                    executeQuery(
+                                        EmployeeQuery(
+                                            fields = listOf("fio", "phone", "salary")
+                                        )
+                                    )
+                                }
                             }
                         ) {
                             Text("Зарплата сотрудников")
@@ -82,7 +101,14 @@ fun App() {
 
                         Button(
                             onClick = {
-                                // TODO
+                                scope.launch {
+                                    executeQuery(
+                                        EmployeeQuery(
+                                            fields = listOf("fio", "address", "experience"),
+                                            sort = "address"
+                                        )
+                                    )
+                                }
                             }
                         ) {
                             Text("Отсортировать по адресу")
@@ -90,7 +116,14 @@ fun App() {
 
                         Button(
                             onClick = {
-                                // TODO
+                                scope.launch {
+                                    executeQuery(
+                                        EmployeeQuery(
+                                            fields = listOf("fio", "address"),
+                                            experienceMin = 4
+                                        )
+                                    )
+                                }
                             }
                         ) {
                             Text("Стаж от 4 лет")
@@ -116,3 +149,5 @@ fun App() {
         }
     }
 }
+
+
