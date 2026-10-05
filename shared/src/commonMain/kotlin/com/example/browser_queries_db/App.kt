@@ -1,11 +1,15 @@
 package com.example.browser_queries_db
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +26,9 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 
 @Composable
 @Preview
@@ -58,9 +65,51 @@ fun App() {
                 }
 
                 else -> {
+                    // Конпки запросов
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Button(
+                            onClick = {
+                                // TODO
+                            }
+                        ) {
+                            Text("Зарплата сотрудников")
+                        }
+
+                        Button(
+                            onClick = {
+                                // TODO
+                            }
+                        ) {
+                            Text("Отсортировать по адресу")
+                        }
+
+                        Button(
+                            onClick = {
+                                // TODO
+                            }
+                        ) {
+                            Text("Стаж от 4 лет")
+                        }
+                    }
+
                     // Kotlin не гарантирует, что employees не изменится между проверками(т. к. var)
                     val employeeData = employees!!
 
+                    // Заголовок таблицы
+                    Text(text = "Таблица: Сотрудники",
+                        style = MaterialTheme.typography.headlineLarge,
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+
+                    // Таблица
                     EmployeeTable(employeeData)
                 }
             }
