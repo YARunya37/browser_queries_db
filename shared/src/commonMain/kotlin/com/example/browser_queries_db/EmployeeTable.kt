@@ -73,10 +73,9 @@ fun EmployeeTable(employees: JsonArray) {
                             .weight(1f)
                             .padding(horizontal = 8.dp)
                     )
-                    HorizontalDivider()
                 }
             }
-
-        }
+            HorizontalDivider()
+          }
     }
 }
