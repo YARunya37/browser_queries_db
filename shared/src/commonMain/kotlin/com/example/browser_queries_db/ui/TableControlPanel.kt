@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material.icons.filled.ViewColumn
@@ -21,8 +20,7 @@ import androidx.compose.ui.unit.dp
 fun TableControlPanel(
     onReset: () -> Unit,
     onFieldsClick: () -> Unit,
-    onSortClick: () -> Unit,
-    onExperienceClick: () -> Unit
+    onSortClick: () -> Unit
 ) {
     Row {
         Button(
@@ -78,25 +76,6 @@ fun TableControlPanel(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text("Сортировка")
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Button(
-            onClick = onExperienceClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.FilterList,
-                contentDescription = "Стаж"
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text("Стаж")
         }
     }
 }

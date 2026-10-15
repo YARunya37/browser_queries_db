@@ -9,11 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.browser_queries_db.model.EmployeeQuery
+import com.example.browser_queries_db.model.TableQuery
 
 @Composable
 fun QuickQueryButtons(
-    onQuery: (EmployeeQuery) -> Unit
+    onQuery: (TableQuery) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -24,7 +24,7 @@ fun QuickQueryButtons(
         Button(
             onClick = {
                 onQuery(
-                    EmployeeQuery(
+                    TableQuery(
                         fields = listOf("fio", "phone", "salary")
                     )
                 )
@@ -36,7 +36,7 @@ fun QuickQueryButtons(
         Button(
             onClick = {
                 onQuery(
-                    EmployeeQuery(
+                    TableQuery(
                         fields = listOf("fio", "address"),
                         sort = "address"
                     )

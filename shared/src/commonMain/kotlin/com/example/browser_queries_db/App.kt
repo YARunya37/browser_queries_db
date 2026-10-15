@@ -19,7 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.browser_queries_db.model.EmployeeQuery
+import com.example.browser_queries_db.model.TableQuery
 import com.example.browser_queries_db.ui.EmployeeTable
 import com.example.browser_queries_db.ui.FieldsDialog
 import com.example.browser_queries_db.ui.QuickQueryButtons
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 @Preview
 fun App() {
     MaterialTheme {
-        var employees by remember { mutableStateOf<JsonArray?>(null) }
+        var rows by remember { mutableStateOf<JsonArray?>(null) }
 
         var error by remember { mutableStateOf<String?>(null) }
 
@@ -39,20 +39,19 @@ fun App() {
 
         var sortDialogVisible by remember { mutableStateOf(false) }
 
-
-        var currentQuery by remember { mutableStateOf(EmployeeQuery()) }
+        var currentQuery by remember { mutableStateOf(TableQuery()) }
 
         val scrollState = rememberScrollState()
         val scope = rememberCoroutineScope()
 
 
         // Локальная функция для вызова запросов к БД
-        suspend fun executeQuery(query: EmployeeQuery) {
+        suspend fun executeQuery(query: TableQuery) {
             currentQuery = query
-            employees = null
+            rows = null
 
             try {
-                employees = loadEmployees(query)
+                rows = loadTableRows(DEFAULT_TABLE_NAME, query)
                 error = null
             } catch (e: Exception) {
                 error = e.message
@@ -61,7 +60,7 @@ fun App() {
 
         LaunchedEffect(Unit) {
             try {
-                employees = loadEmployees(EmployeeQuery())
+                rows = loadTableRows(DEFAULT_TABLE_NAME, TableQuery())
             } catch (e: Exception) {
                 error = e.message
             }
@@ -109,25 +108,6 @@ fun App() {
             )
         }
 
-        if (experienceDialogVisible) {
-            ExperienceDialog(
-                onDismiss = {
-                    experienceDialogVisible = false
-                },
-                onApply = { experience ->
-                    experienceDialogVisible = false
-
-                    scope.launch {
-                        executeQuery(
-                            currentQuery.copy(
-                                experienceMin = experience
-                            )
-                        )
-                    }
-                }
-            )
-        }
-
         // ОСНОВНОЙ ЭКРАН
         Column(
             modifier = Modifier
@@ -159,7 +139,7 @@ fun App() {
             TableControlPanel(
                 onReset = {
                     scope.launch {
-                        executeQuery(EmployeeQuery())
+                        executeQuery(TableQuery())
                     }
                 },
                 onFieldsClick = {
@@ -176,14 +156,14 @@ fun App() {
                     Text("Error: $error")
                 }
 
-                employees == null -> {
+                rows == null -> {
                     Text("Loading...")
                 }
 
                 else -> {
-                    val employeeData = employees!!
+                    val rowData = rows!!
 
-                    EmployeeTable(employeeData)
+                    EmployeeTable(rowData)
                 }
             }
         }

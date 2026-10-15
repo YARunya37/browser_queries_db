@@ -1,6 +1,6 @@
 package com.example.browser_queries_db
 
-import com.example.browser_queries_db.model.EmployeeQuery
+import com.example.browser_queries_db.model.TableQuery
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
@@ -9,6 +9,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.JsonArray
+
+// Таблица, данные которой читаются по умолчанию
+const val DEFAULT_TABLE_NAME = "table_kliuchikov"
 
 val httpClient = HttpClient {
     install(ContentNegotiation) {
@@ -26,8 +29,8 @@ val httpClient = HttpClient {
 }
 
 
-suspend fun loadEmployees(query: EmployeeQuery): JsonArray {
-    return httpClient.get("http://localhost:8080/employees") {
+suspend fun loadTableRows(tableName: String, query: TableQuery): JsonArray {
+    return httpClient.get("http://localhost:8080/tables/$tableName/rows") {
         // Формируем параметры, если они есть
         query.fields?.let {
             parameter("fields", it.joinToString(","))
@@ -39,10 +42,6 @@ suspend fun loadEmployees(query: EmployeeQuery): JsonArray {
 
         query.direction?.let {
             parameter("direction", it)
-        }
-
-        query.experienceMin?.let {
-            parameter("experienceMin", it)
         }
     }.body()
 }
