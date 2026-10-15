@@ -121,6 +121,108 @@ class TableRepository {
     }
 
     /**
+     * Получает список имён колонок таблицы.
+     * Имя таблицы передаётся как значение через PreparedStatement,
+     * чтобы избежать SQL-инъекции.
+     *
+     * @return список имён колонок в порядке их следования в таблице.
+     */
+    fun getColumnNames(tableName: String): List<String> {
+
+        val sql = """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = ?
+            ORDER BY ordinal_position
+        """.trimIndent()
+
+        createConnection().use { connection ->
+
+            connection.prepareStatement(sql).use { statement ->
+
+                statement.setString(1, tableName)
+
+                statement.executeQuery().use { resultSet ->
+
+                    return buildList {
+
+                        while (resultSet.next()) {
+                            add(resultSet.getString("column_name"))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Читает данные из таблицы с динамическим набором колонок.
+     * Имена таблицы и колонок приходят уже провалидированными из TableService
+     * и оборачиваются в кавычки; значения сортировки не подставляются извне.
+     *
+     * @param fields список колонок для выборки; пустой список означает все колонки (*).
+     * @param sort колонка сортировки или null.
+     * @param direction направление сортировки ("ASC"/"DESC") или null.
+     * @return список строк: каждая строка — map имя колонки -> значение.
+     */
+    fun selectRows(
+        tableName: String,
+        fields: List<String>,
+        sort: String?,
+        direction: String?
+    ): List<Map<String, Any?>> {
+
+        val sqlFields = if (fields.isEmpty()) {
+            "*"
+        } else {
+            fields.joinToString(", ") { quote(it) }
+        }
+
+        val sql = buildString {
+            append("SELECT ")
+            append(sqlFields)
+            append(" FROM ")
+            append(quote(tableName))
+
+            if (sort != null) {
+                append(" ORDER BY ")
+                append(quote(sort))
+                append(" ")
+                append(direction)
+            }
+        }
+
+        createConnection().use { connection ->
+
+            connection.prepareStatement(sql).use { statement ->
+
+                statement.executeQuery().use { resultSet ->
+
+                    val metadata = resultSet.metaData
+                    val columnCount = metadata.columnCount
+
+                    return buildList {
+
+                        while (resultSet.next()) {
+
+                            val row = buildMap {
+
+                                for (i in 1..columnCount) {
+                                    val columnName = metadata.getColumnLabel(i)
+                                    val value = resultSet.getObject(i)
+                                    put(columnName, value)
+                                }
+                            }
+
+                            add(row)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Собирает определение одной колонки для SQL: "имя" ТИП [NOT NULL].
      *
      * @return строка с определением колонки.

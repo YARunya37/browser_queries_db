@@ -102,6 +102,132 @@ class TableService(
     }
 
     /**
+     * Читает данные из произвольной таблицы по выбранным полям.
+     * Колонки валидируются по реальной структуре таблицы, полученной из БД.
+     *
+     * @param fields список полей через запятую; null или пусто — все поля.
+     * @param sort поле сортировки; null — без сортировки.
+     * @param direction направление сортировки ("asc"/"desc"); null — по умолчанию ASC.
+     * @return JsonArray, где каждый элемент — объект с выбранными полями и их значениями.
+     * @throws IllegalArgumentException если таблица или поля некорректны.
+     */
+    fun getRows(
+        tableName: String,
+        fields: String?,
+        sort: String?,
+        direction: String?
+    ): JsonArray {
+
+        validateTableName(tableName)
+
+        // Получаем реальные колонки таблицы, чтобы валидировать выбираемые поля
+        val columns = tableRepository.getColumnNames(tableName)
+
+        if (columns.isEmpty()) {
+            throw IllegalArgumentException("Table not found: $tableName")
+        }
+
+        val sqlFields = validateSelectFields(fields, columns)
+
+        val sqlSort = validateSelectSort(sort, columns)
+
+        val sqlDirection = validateSelectDirection(direction, sqlSort)
+
+        return toJsonArray(
+            tableRepository.selectRows(
+                tableName = tableName,
+                fields = sqlFields,
+                sort = sqlSort,
+                direction = sqlDirection
+            )
+        )
+    }
+
+    /**
+     * Проверяет выбираемые поля по реальным колонкам таблицы (без учёта регистра).
+     *
+     * @return список реальных имён колонок; пустой список означает все колонки (*).
+     * @throws IllegalArgumentException если поле отсутствует в таблице.
+     */
+    private fun validateSelectFields(
+        fields: String?,
+        columns: List<String>
+    ): List<String> {
+
+        if (fields.isNullOrBlank()) {
+            return emptyList()
+        }
+
+        return fields.split(",").map { field ->
+            resolveColumn(field.trim(), columns)
+        }
+    }
+
+    /**
+     * Проверяет поле сортировки по реальным колонкам таблицы.
+     *
+     * @return реальное имя колонки сортировки или null.
+     * @throws IllegalArgumentException если поле отсутствует в таблице.
+     */
+    private fun validateSelectSort(
+        sort: String?,
+        columns: List<String>
+    ): String? {
+        return sort?.let { resolveColumn(it.trim(), columns) }
+    }
+
+    /**
+     * Проверяет и нормализует направление сортировки.
+     *
+     * @return "ASC"/"DESC" или null, если сортировка не задана.
+     * @throws IllegalArgumentException если направление некорректно или задано без сортировки.
+     */
+    private fun validateSelectDirection(
+        direction: String?,
+        sqlSort: String?
+    ): String? {
+
+        var sqlDirection: String? = null
+
+        if (direction != null) {
+            sqlDirection = when (direction.lowercase()) {
+                "asc" -> "ASC"
+                "desc" -> "DESC"
+
+                else -> throw IllegalArgumentException(
+                    "Direction must be ASC or DESC"
+                )
+            }
+        }
+
+        // direction имеет смысл только вместе с sort
+        if (sqlDirection != null && sqlSort == null) {
+            throw IllegalArgumentException("Direction requires sort")
+        }
+
+        // Значение по умолчанию, если направление не указано
+        if (sqlSort != null && sqlDirection == null) {
+            sqlDirection = "ASC"
+        }
+
+        return sqlDirection
+    }
+
+    /**
+     * Находит реальное имя колонки по имени из запроса (без учёта регистра).
+     *
+     * @return реальное имя колонки.
+     * @throws IllegalArgumentException если колонка не найдена.
+     */
+    private fun resolveColumn(
+        name: String,
+        columns: List<String>
+    ): String {
+        return columns.firstOrNull { it.equals(name, ignoreCase = true) }
+            ?: throw IllegalArgumentException("Unknown field: $name")
+    }
+
+    /**
      * Проверяет имя таблицы на допустимые символы.
      *
      * @throws IllegalArgumentException если имя таблицы недопустимо.

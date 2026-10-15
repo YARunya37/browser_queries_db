@@ -195,6 +195,50 @@ fun Application.configureRouting(
                     )
                 }
             }
+
+            // SELECT — получение данных из таблицы.
+            // Поля, сортировка и направление передаются через параметры http,
+            // как в маршруте /employees
+            get("/rows") {
+
+                val tableName = call.parameters["table_name"]
+                    ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        "table_name is required"
+                    )
+
+                val fields = call.request.queryParameters["fields"]
+
+                val sort = call.request.queryParameters["sort"]
+
+                val direction = call.request.queryParameters["direction"]
+
+                try {
+
+                    val rows = tableService.getRows(
+                        tableName = tableName,
+                        fields = fields,
+                        sort = sort,
+                        direction = direction
+                    )
+
+                    call.respond(rows)
+
+                } catch (e: IllegalArgumentException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Bad request"
+                    )
+
+                } catch (e: SQLException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Database error"
+                    )
+                }
+            }
         }
     }
 }
