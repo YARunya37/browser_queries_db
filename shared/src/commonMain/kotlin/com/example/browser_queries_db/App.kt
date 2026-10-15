@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.EmployeeQuery
 import com.example.browser_queries_db.ui.EmployeeTable
-import com.example.browser_queries_db.ui.ExperienceDialog
 import com.example.browser_queries_db.ui.FieldsDialog
 import com.example.browser_queries_db.ui.QuickQueryButtons
 import com.example.browser_queries_db.ui.SortDialog
@@ -40,7 +39,6 @@ fun App() {
 
         var sortDialogVisible by remember { mutableStateOf(false) }
 
-        var experienceDialogVisible by remember { mutableStateOf(false) }
 
         var currentQuery by remember { mutableStateOf(EmployeeQuery()) }
 
@@ -169,9 +167,6 @@ fun App() {
                 },
                 onSortClick = {
                     sortDialogVisible = true
-                },
-                onExperienceClick = {
-                    experienceDialogVisible = true
                 }
             )
 

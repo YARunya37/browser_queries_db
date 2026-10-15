@@ -45,18 +45,5 @@ fun QuickQueryButtons(
         ) {
             Text("Отсортировать по адресу")
         }
-
-        Button(
-            onClick = {
-                onQuery(
-                    EmployeeQuery(
-                        fields = listOf("fio", "address", "experience"),
-                        experienceMin = 4
-                    )
-                )
-            }
-        ) {
-            Text("Стаж от 4 лет")
-        }
     }
 }
