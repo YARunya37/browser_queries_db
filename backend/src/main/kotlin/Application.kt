@@ -2,6 +2,8 @@ package com.example
 
 import com.example.repository.TableRepository
 import com.example.service.TableService
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -21,6 +23,12 @@ fun Application.rootModule() {
     // Разрешаем frontend с localhost:8081 обращаться к API.
     install(CORS) {
         allowHost("localhost:8081")
+
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Options)
+        allowHeader(HttpHeaders.ContentType)
     }
 
     // DI
