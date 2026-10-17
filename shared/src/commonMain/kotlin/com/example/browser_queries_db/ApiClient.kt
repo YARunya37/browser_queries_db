@@ -7,6 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -58,4 +59,8 @@ suspend fun createTable(tableName:String, columns: List<ColumnDefinition>): Http
         contentType(ContentType.Application.Json)
         setBody(CreateTableRequest(columns))
     }
+}
+
+suspend fun deleteTable(tableName: String): HttpResponse{
+    return httpClient.delete("http://localhost:8080/tables/$tableName")
 }
