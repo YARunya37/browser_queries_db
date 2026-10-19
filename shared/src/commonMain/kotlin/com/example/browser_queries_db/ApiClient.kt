@@ -3,6 +3,8 @@ package com.example.browser_queries_db
 import com.example.browser_queries_db.model.ColumnDefinition
 import com.example.browser_queries_db.model.CreateTableRequest
 import com.example.browser_queries_db.model.TableQuery
+import com.example.browser_queries_db.model.UpdateColumnQuery
+import com.example.browser_queries_db.model.UpdateTableRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
@@ -10,6 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -52,6 +55,13 @@ suspend fun loadTableRows(tableName: String, query: TableQuery): JsonArray {
             parameter("direction", it)
         }
     }.body()
+}
+
+suspend fun updateTable(tableName: String, columns: List<UpdateColumnQuery>): HttpResponse{
+    return httpClient.patch("http://localhost:8080/tables/$tableName"){
+        contentType(ContentType.Application.Json)
+        setBody(UpdateTableRequest(columns))
+    }
 }
 
 suspend fun createTable(tableName:String, columns: List<ColumnDefinition>): HttpResponse{
