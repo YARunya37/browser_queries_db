@@ -19,15 +19,13 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
-fun DatabaseTable(headers: JsonArray, rows: JsonArray) {
+fun DatabaseTable(rows: JsonArray) {
 
     // Определяем какие колонки получили
-    val columns = headers.map { columnDefinition ->
-        columnDefinition.jsonObject["column_name"]?.jsonPrimitive?.content.orEmpty()
-    }
+    val columns = rows.firstOrNull()?.jsonObject?.keys?.toList() ?: emptyList<String>()
 
     // Веса каждой из колонок
-    val columnWeights = calculateColumnWeights(headers, rows)
+    val columnWeights = calculateColumnWeights(columns, rows)
 
 
     // Таблица
@@ -104,25 +102,24 @@ fun DatabaseTable(headers: JsonArray, rows: JsonArray) {
 }
 
 fun calculateColumnWeights(
-    headers: JsonArray,
+    columns: List<String>,
     rows: JsonArray
 ): Map<String, Float> {
-    val maxLengths = headers.associate { header ->
-        val name = header.jsonObject["column_name"]!!.jsonPrimitive.content
-        name to name.length
+    val maxLengths = columns.associate { columnName ->
+        columnName to columnName.length
     }.toMutableMap()
 
     rows.forEach { row ->
         val rowObject = row.jsonObject
 
-        headers.forEach { header ->
-            val name = header.jsonObject["column_name"]!!.jsonPrimitive.content
-            val value = rowObject[name]?.let {
+        columns.forEach { columnName ->
+
+            val value = rowObject[columnName]?.let {
                 if (it is JsonNull) "" else it.jsonPrimitive.content
             } ?: ""
 
-            maxLengths[name] = maxOf(
-                maxLengths[name] ?: 0,
+            maxLengths[columnName] = maxOf(
+                maxLengths[columnName] ?: 0,
                 value.length
             )
         }

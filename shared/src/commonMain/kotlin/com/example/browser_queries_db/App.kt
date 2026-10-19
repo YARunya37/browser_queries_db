@@ -173,8 +173,8 @@ fun App() {
 
                 else -> {
                     val rowData = rows!!
-                    val currHeaders = headers!!
-                    DatabaseTable(currHeaders, rowData)
+
+                    DatabaseTable(rowData)
                 }
             }
         }
