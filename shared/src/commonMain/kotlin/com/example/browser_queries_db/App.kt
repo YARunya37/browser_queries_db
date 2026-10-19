@@ -26,6 +26,8 @@ import com.example.browser_queries_db.ui.QuickQueryButtons
 import com.example.browser_queries_db.ui.SortDialog
 import com.example.browser_queries_db.ui.TableControlPanel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 @Preview
@@ -93,8 +95,13 @@ fun App() {
             )
         }
 
-        if (fieldsDialogVisible) {
+        if (fieldsDialogVisible && headers != null) {
+            val currHeaders = headers!!
+
             FieldsDialog(
+                currHeaders.map { header ->
+                    header.jsonObject["column_name"]?.jsonPrimitive?.content.orEmpty()
+                },
                 onDismiss = {
                     fieldsDialogVisible = false
                 },

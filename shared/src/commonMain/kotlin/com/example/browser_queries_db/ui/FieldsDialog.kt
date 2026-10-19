@@ -15,30 +15,13 @@ import androidx.compose.ui.Alignment
 
 @Composable
 fun FieldsDialog(
+    fields: List<String>,
     onDismiss: () -> Unit,
     onApply: (List<String>) -> Unit
 ) {
-    // Отсортированные поля
-    val fields = listOf(
-        "fio" to "ФИО",
-        "phone" to "Телефон",
-        "salary" to "Зарплата",
-        "address" to "Адрес",
-        "experience" to "Стаж"
-    )
 
     // Поля выбранные пользователем
-    var selectedFields by remember {
-        mutableStateOf(
-            setOf(
-                "fio",
-                "phone",
-                "salary",
-                "address",
-                "experience"
-            )
-        )
-    }
+    var selectedFields by remember { mutableStateOf(fields.toSet()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -49,7 +32,7 @@ fun FieldsDialog(
 
         text = {
             Column {
-                fields.forEach { (field, displayName) ->
+                fields.forEach { field ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -66,7 +49,7 @@ fun FieldsDialog(
                             }
                         )
 
-                        Text(displayName)
+                        Text(field)
                     }
                 }
             }
@@ -77,10 +60,10 @@ fun FieldsDialog(
                 onClick = {
                     // Отбираем поля в правильной последовательности. Если поле выбрано, то оно попадает в список
                     val orderedFields = fields
-                        .filter { (field, _) ->
+                        .filter { field ->
                             field in selectedFields
                         }
-                        .map { (field, _) ->
+                        .map { field ->
                             field
                         }
 
