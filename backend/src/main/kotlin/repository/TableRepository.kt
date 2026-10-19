@@ -251,6 +251,10 @@ class TableRepository {
         append(quote(column.name))
         append(" TYPE ")
         append(column.type)
+        append(" USING ")
+        append(quote(column.name))
+        append("::")
+        append(column.type)
 
         if (column.nullable) {
             append(", ALTER COLUMN ")
