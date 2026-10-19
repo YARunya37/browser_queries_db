@@ -20,7 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.TableQuery
-import com.example.browser_queries_db.ui.EmployeeTable
+import com.example.browser_queries_db.ui.DatabaseTable
 import com.example.browser_queries_db.ui.FieldsDialog
 import com.example.browser_queries_db.ui.QuickQueryButtons
 import com.example.browser_queries_db.ui.SortDialog
@@ -32,6 +32,8 @@ import kotlinx.coroutines.launch
 fun App() {
     MaterialTheme {
         var rows by remember { mutableStateOf<JsonArray?>(null) }
+
+        var headers by remember { mutableStateOf<JsonArray?>(null) }
 
         var error by remember { mutableStateOf<String?>(null) }
 
@@ -51,6 +53,7 @@ fun App() {
             rows = null
 
             try {
+
                 rows = loadTableRows(DEFAULT_TABLE_NAME, query)
                 error = null
             } catch (e: Exception) {
@@ -60,6 +63,7 @@ fun App() {
 
         LaunchedEffect(Unit) {
             try {
+                headers = getTableHeaders(DEFAULT_TABLE_NAME)
                 rows = loadTableRows(DEFAULT_TABLE_NAME, TableQuery())
             } catch (e: Exception) {
                 error = e.message
@@ -156,14 +160,14 @@ fun App() {
                     Text("Error: $error")
                 }
 
-                rows == null -> {
+                headers == null || rows == null -> {
                     Text("Loading...")
                 }
 
                 else -> {
                     val rowData = rows!!
-
-                    EmployeeTable(rowData)
+                    val currHeaders = headers!!
+                    DatabaseTable(currHeaders, rowData)
                 }
             }
         }

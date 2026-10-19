@@ -10,43 +10,25 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonArray
+import androidx.compose.ui.Alignment
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
-fun EmployeeTable(employees: JsonArray) {
-
-    // Названия колонок для отображения в UI
-    val columnNames = mapOf(
-        "id" to "ID",
-        "fio" to "ФИО",
-        "phone" to "Телефон",
-        "salary" to "Зарплата",
-        "address" to "Адрес",
-        "experience" to "Стаж"
-    )
-
-    // Веса для колонок
-    val columnWeights = mapOf(
-        "id" to 0.5f,
-        "fio" to 2f,
-        "phone" to 1.5f,
-        "salary" to 1f,
-        "address" to 2f,
-        "experience" to 0.5f
-    )
+fun DatabaseTable(headers: JsonArray, rows: JsonArray) {
 
     // Определяем какие колонки получили
-    val columns =
-        employees.firstOrNull()
-            ?.jsonObject
-            ?.keys
-            ?: emptySet()
+    val columns = headers.map { columnDefinition ->
+        columnDefinition.jsonObject["column_name"]?.jsonPrimitive?.content.orEmpty()
+    }
+
+    // Веса каждой из колонок
+    val columnWeights = calculateColumnWeights(headers, rows)
+
 
     // Таблица
     HorizontalDivider()
@@ -54,7 +36,7 @@ fun EmployeeTable(employees: JsonArray) {
         modifier = Modifier.fillMaxWidth()
     ) {
         // Заголовок таблицы
-        if (employees.isEmpty()) {
+        if (rows.isEmpty()) {
 
             Box(
                 modifier = Modifier
@@ -69,7 +51,7 @@ fun EmployeeTable(employees: JsonArray) {
                 )
             }
 
-        }else {
+        } else {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -78,7 +60,7 @@ fun EmployeeTable(employees: JsonArray) {
             ) {
                 for (column in columns) {
                     Text(
-                        text = columnNames[column] ?: column,
+                        text = column,
                         modifier = Modifier
                             .weight(columnWeights[column] ?: 1f)
                             .padding(horizontal = 4.dp),
@@ -90,8 +72,9 @@ fun EmployeeTable(employees: JsonArray) {
         HorizontalDivider()
 
         // Записи таблицы
-        for (employee in employees) {
-            val employeeObject = employee.jsonObject
+        for (row in rows) {
+            // Объект - строка таблицы(колонка1 : знач, колонка2 : знач ...)
+            val rowObject = row.jsonObject
 
             Row(
                 modifier = Modifier
@@ -100,7 +83,7 @@ fun EmployeeTable(employees: JsonArray) {
             ) {
                 // Пишем значения для каждой колонки
                 for (column in columns) {
-                    val value = employeeObject[column]
+                    val value = rowObject[column]
 
                     Text(
                         text = when {
@@ -115,6 +98,39 @@ fun EmployeeTable(employees: JsonArray) {
                 }
             }
             HorizontalDivider()
-          }
+        }
+    }
+
+}
+
+fun calculateColumnWeights(
+    headers: JsonArray,
+    rows: JsonArray
+): Map<String, Float> {
+    val maxLengths = headers.associate { header ->
+        val name = header.jsonObject["column_name"]!!.jsonPrimitive.content
+        name to name.length
+    }.toMutableMap()
+
+    rows.forEach { row ->
+        val rowObject = row.jsonObject
+
+        headers.forEach { header ->
+            val name = header.jsonObject["column_name"]!!.jsonPrimitive.content
+            val value = rowObject[name]?.let {
+                if (it is JsonNull) "" else it.jsonPrimitive.content
+            } ?: ""
+
+            maxLengths[name] = maxOf(
+                maxLengths[name] ?: 0,
+                value.length
+            )
+        }
+    }
+
+    val totalLength = maxLengths.values.sum().toFloat()
+
+    return maxLengths.mapValues { (_, length) ->
+        length / totalLength
     }
 }
