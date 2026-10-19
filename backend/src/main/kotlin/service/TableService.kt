@@ -70,18 +70,10 @@ class TableService(
             throw IllegalArgumentException("Columns cannot be empty")
         }
 
-        validateUniqueNames(columns)
+        validateColumns(columns)
 
         val sqlColumns = columns.map { column ->
-            validateColumnName(column.name)
             validateAction(column.action, column.name)
-
-            // У id менять тип/удалять нельзя
-            if (column.action.lowercase() in setOf("drop", "alter")) {
-                throw IllegalArgumentException(
-                    "Column id cannot be dropped or altered"
-                )
-            }
 
             column.copy(type = mapType(column.type))
         }
