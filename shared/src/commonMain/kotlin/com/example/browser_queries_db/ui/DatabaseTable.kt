@@ -22,7 +22,7 @@ import kotlinx.serialization.json.jsonPrimitive
 fun DatabaseTable(rows: JsonArray) {
 
     // Определяем какие колонки получили
-    val columns = rows.firstOrNull()?.jsonObject?.keys?.toList() ?: emptyList<String>()
+    val columns = rows.firstOrNull()?.jsonObject?.keys?.toList() ?: emptyList()
 
     // Веса каждой из колонок
     val columnWeights = calculateColumnWeights(columns, rows)
@@ -105,8 +105,8 @@ fun calculateColumnWeights(
     columns: List<String>,
     rows: JsonArray
 ): Map<String, Float> {
-    val maxLengths = columns.associate { columnName ->
-        columnName to columnName.length
+    val maxLengths = columns.associateWith { columnName ->
+        columnName.length
     }.toMutableMap()
 
     rows.forEach { row ->
