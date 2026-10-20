@@ -25,6 +25,7 @@ import com.example.browser_queries_db.ui.dialogs.FieldsDialog
 import com.example.browser_queries_db.ui.components.QuickQueryButtons
 import com.example.browser_queries_db.ui.dialogs.SortDialog
 import com.example.browser_queries_db.ui.components.TableControlPanel
+import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -42,6 +43,8 @@ fun App() {
         var fieldsDialogVisible by remember { mutableStateOf(false) }
 
         var sortDialogVisible by remember { mutableStateOf(false) }
+
+        var createTableVisible by remember { mutableStateOf(false) }
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
 
@@ -123,6 +126,16 @@ fun App() {
             )
         }
 
+        if (createTableVisible){
+            CreateTableDialog(
+                { name, columns ->
+                    createTableVisible = false
+                    scope.launch { createTable(name, columns) }
+                },
+                onDismiss = { createTableVisible = false}
+            )
+        }
+
         // ОСНОВНОЙ ЭКРАН
         Column(
             modifier = Modifier
@@ -134,6 +147,17 @@ fun App() {
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            TableControlPanel({
+                    createTableVisible = true
+                }, {
+
+                }, {
+
+                }, {
+
+                }
+            )
+
             QuickQueryButtons(
                 onQuery = { query ->
                     scope.launch {
