@@ -20,11 +20,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.TableQuery
-import com.example.browser_queries_db.ui.DatabaseTable
-import com.example.browser_queries_db.ui.FieldsDialog
-import com.example.browser_queries_db.ui.QuickQueryButtons
-import com.example.browser_queries_db.ui.SortDialog
-import com.example.browser_queries_db.ui.TableControlPanel
+import com.example.browser_queries_db.ui.components.DatabaseTable
+import com.example.browser_queries_db.ui.dialogs.FieldsDialog
+import com.example.browser_queries_db.ui.components.QuickQueryButtons
+import com.example.browser_queries_db.ui.dialogs.SortDialog
+import com.example.browser_queries_db.ui.components.TableControlPanel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive

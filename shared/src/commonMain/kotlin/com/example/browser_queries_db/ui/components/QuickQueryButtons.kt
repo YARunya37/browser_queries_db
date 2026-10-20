@@ -1,4 +1,4 @@
-package com.example.browser_queries_db.ui
+package com.example.browser_queries_db.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
