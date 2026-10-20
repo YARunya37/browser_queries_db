@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SortDialog(
+    fields: List<String>,
     onDismiss: () -> Unit,
     onApply: (field: String, direction: String) -> Unit
 ) {
@@ -30,13 +31,6 @@ fun SortDialog(
     var selectedDirection by remember { mutableStateOf("asc") }
 
     var dropdownExpanded by remember { mutableStateOf(false) }
-
-    val fields = mapOf(
-        "fio" to "ФИО",
-        "salary" to "Зарплата",
-        "address" to "Адрес",
-        "experience" to "Стаж"
-    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -56,8 +50,7 @@ fun SortDialog(
                         }
                     ) {
                         Text(
-                            fields[selectedField]
-                                ?: selectedField
+                            selectedField
                         )
                     }
 
@@ -67,10 +60,10 @@ fun SortDialog(
                             dropdownExpanded = false
                         }
                     ) {
-                        for ((field, displayName) in fields) {
+                        for (field in fields) {
                             DropdownMenuItem(
                                 text = {
-                                    Text(displayName)
+                                    Text(field)
                                 },
                                 onClick = {
                                     selectedField = field

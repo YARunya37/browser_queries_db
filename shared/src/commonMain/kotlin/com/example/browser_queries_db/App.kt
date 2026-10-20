@@ -75,8 +75,12 @@ fun App() {
 
         // ДИАЛОГИ
 
-        if (sortDialogVisible) {
+        if (sortDialogVisible && headers != null) {
+            val currHeaders = headers!!
             SortDialog(
+                currHeaders.map { header ->
+                    header.jsonObject["column_name"]?.jsonPrimitive?.content.orEmpty()
+                },
                 onDismiss = {
                     sortDialogVisible = false
                 },
