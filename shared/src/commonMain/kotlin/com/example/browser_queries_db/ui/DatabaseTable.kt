@@ -128,6 +128,7 @@ fun calculateColumnWeights(
     val totalLength = maxLengths.values.sum().toFloat()
 
     return maxLengths.mapValues { (_, length) ->
-        length / totalLength
+        val weight = length / totalLength
+        if (weight >= 0.05f) weight else 0.05f
     }
 }
