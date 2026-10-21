@@ -39,6 +39,10 @@ val httpClient = HttpClient {
     }
 }
 
+suspend fun getTables(): JsonArray {
+    return httpClient.get("http://localhost:8080/tables").body()
+}
+
 suspend fun getTableHeaders(tableName: String): JsonArray {
     return httpClient.get("http://localhost:8080/tables/$tableName").body()
 }
