@@ -57,59 +57,63 @@ fun ColumnRow(
 ) {
     var dropdownExpanded by remember { mutableStateOf(false) }
 
-    Row(
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        // Секция ввода названия
-        Column {
-            Text("Название колонки №$number:")
-            TextField(
-                value = columnName,
-                onValueChange = onColumnNameChange,
-                enabled = nameEnabled
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+        ) {
+            // Секция ввода названия
+            Column {
+                Text("Название колонки №$number:")
+                TextField(
+                    value = columnName,
+                    onValueChange = onColumnNameChange,
+                    enabled = nameEnabled
+                )
+            }
+
+            // Секция выбора типа данных
+            Box {
+                OutlinedButton(
+                    onClick = {
+                        dropdownExpanded = true
+                    }
+                ) {
+                    Text(columnType)
+                }
+
+                DropdownMenu(
+                    expanded = dropdownExpanded,
+                    onDismissRequest = {
+                        dropdownExpanded = false
+                    }
+                ) {
+                    for (datatype in COLUMN_TYPES) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(datatype)
+                            },
+                            onClick = {
+                                onColumnTypeChange(datatype)
+                                dropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Секция поддержки null
+            Text("nullable:")
+            Checkbox(
+                checked = isNullable,
+                onCheckedChange = onNullableChange
             )
         }
-
-        // Секция выбора типа данных
-        Box {
-            OutlinedButton(
-                onClick = {
-                    dropdownExpanded = true
-                }
-            ) {
-                Text(columnType)
-            }
-
-            DropdownMenu(
-                expanded = dropdownExpanded,
-                onDismissRequest = {
-                    dropdownExpanded = false
-                }
-            ) {
-                for (datatype in COLUMN_TYPES) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(datatype)
-                        },
-                        onClick = {
-                            onColumnTypeChange(datatype)
-                            dropdownExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        // Секция поддержки null
-        Text("nullable:")
-        Checkbox(
-            checked = isNullable,
-            onCheckedChange = onNullableChange
-        )
 
         // Кнопка удаления колонки (если удаление доступно)
         if (onDelete != null) {
