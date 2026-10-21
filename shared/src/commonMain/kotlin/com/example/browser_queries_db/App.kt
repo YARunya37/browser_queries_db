@@ -28,6 +28,7 @@ import com.example.browser_queries_db.ui.components.TableControlPanel
 import com.example.browser_queries_db.ui.components.ToastNotification
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
 import com.example.browser_queries_db.ui.dialogs.EditTableDialog
+import com.example.browser_queries_db.ui.dialogs.ShowTableDialog
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
@@ -51,6 +52,10 @@ fun App() {
 
         var editDialogTables by remember { mutableStateOf<List<String>?>(null) }
 
+        var showDialogTables by remember { mutableStateOf<List<String>?>(null) }
+
+        var currentTableName by remember { mutableStateOf(DEFAULT_TABLE_NAME) }
+
         var currentQuery by remember { mutableStateOf(TableQuery()) }
 
         var isToastVisible by remember { mutableStateOf(false) }
@@ -60,6 +65,22 @@ fun App() {
         val scope = rememberCoroutineScope()
 
 
+        // Переключает отображаемую таблицу и загружает её структуру и данные
+        suspend fun showTable(tableName: String) {
+            currentTableName = tableName
+            currentQuery = TableQuery()
+            headers = null
+            rows = null
+
+            try {
+                headers = getTableHeaders(tableName)
+                rows = loadTableRows(tableName, TableQuery())
+                error = null
+            } catch (e: Exception) {
+                error = e.message
+            }
+        }
+
         // Локальная функция для вызова запросов к БД
         suspend fun executeQuery(query: TableQuery) {
             currentQuery = query
@@ -67,7 +88,7 @@ fun App() {
 
             try {
 
-                rows = loadTableRows(DEFAULT_TABLE_NAME, query)
+                rows = loadTableRows(currentTableName, query)
                 error = null
             } catch (e: Exception) {
                 error = e.message
@@ -75,12 +96,7 @@ fun App() {
         }
 
         LaunchedEffect(Unit) {
-            try {
-                headers = getTableHeaders(DEFAULT_TABLE_NAME)
-                rows = loadTableRows(DEFAULT_TABLE_NAME, TableQuery())
-            } catch (e: Exception) {
-                error = e.message
-            }
+            showTable(currentTableName)
         }
 
 
@@ -162,15 +178,26 @@ fun App() {
                             isToastVisible = true
                             toastMessage = response.bodyAsText()
 
-                            // Обновляем отображаемую таблицу, если изменили её структуру
-                            if (tableName == DEFAULT_TABLE_NAME) {
-                                headers = getTableHeaders(DEFAULT_TABLE_NAME)
-                                rows = loadTableRows(DEFAULT_TABLE_NAME, currentQuery)
-                            }
+                            // Показываем отредактированную таблицу
+                            showTable(tableName)
                         } catch (e: Exception) {
                             isToastVisible = true
                             toastMessage = e.message ?: "Ошибка обновления таблицы"
                         }
+                    }
+                }
+            )
+        }
+
+        if (showDialogTables != null) {
+            ShowTableDialog(
+                tables = showDialogTables!!,
+                onDismiss = { showDialogTables = null },
+                onShowTable = { tableName ->
+                    showDialogTables = null
+
+                    scope.launch {
+                        showTable(tableName)
                     }
                 }
             )
@@ -213,7 +240,20 @@ fun App() {
             }, {
 
             }, {
+                scope.launch {
+                    try {
+                        val tables = getTables().mapNotNull { table ->
+                            table.jsonObject["table_name"]
+                                ?.jsonPrimitive
+                                ?.content
+                        }
 
+                        showDialogTables = tables
+                    } catch (e: Exception) {
+                        isToastVisible = true
+                        toastMessage = e.message ?: "Ошибка загрузки таблиц"
+                    }
+                }
             }
             )
 
@@ -226,7 +266,7 @@ fun App() {
             )
 
             Text(
-                text = "Таблица: Сотрудники",
+                text = "Таблица: $currentTableName",
                 style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier
                     .padding(vertical = 8.dp)
