@@ -90,6 +90,12 @@ fun CreateTableDialog(
                                 columns[i] = columns[i].copy(nullable = newNullable)
                             }
                         )
+
+                        if (i < columns.lastIndex) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }

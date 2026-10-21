@@ -253,6 +253,12 @@ fun EditTableDialog(
                                     }
                                 }
                             )
+
+                            if (i < columns.lastIndex) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
                         }
 
                         OutlinedButton(
