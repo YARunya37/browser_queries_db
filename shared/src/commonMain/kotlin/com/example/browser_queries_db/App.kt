@@ -27,6 +27,7 @@ import com.example.browser_queries_db.ui.dialogs.SortDialog
 import com.example.browser_queries_db.ui.components.TableControlPanel
 import com.example.browser_queries_db.ui.components.ToastNotification
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
+import com.example.browser_queries_db.ui.dialogs.EditTableDialog
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
@@ -47,6 +48,8 @@ fun App() {
         var sortDialogVisible by remember { mutableStateOf(false) }
 
         var createTableVisible by remember { mutableStateOf(false) }
+
+        var editDialogTables by remember { mutableStateOf<List<String>?>(null) }
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
 
@@ -145,6 +148,34 @@ fun App() {
             )
         }
 
+        if (editDialogTables != null) {
+            EditTableDialog(
+                tables = editDialogTables!!,
+                onDismiss = { editDialogTables = null },
+                onApply = { tableName, columns ->
+                    editDialogTables = null
+
+                    scope.launch {
+                        try {
+                            val response = updateTable(tableName, columns)
+
+                            isToastVisible = true
+                            toastMessage = response.bodyAsText()
+
+                            // Обновляем отображаемую таблицу, если изменили её структуру
+                            if (tableName == DEFAULT_TABLE_NAME) {
+                                headers = getTableHeaders(DEFAULT_TABLE_NAME)
+                                rows = loadTableRows(DEFAULT_TABLE_NAME, currentQuery)
+                            }
+                        } catch (e: Exception) {
+                            isToastVisible = true
+                            toastMessage = e.message ?: "Ошибка обновления таблицы"
+                        }
+                    }
+                }
+            )
+        }
+
         // ОСНОВНОЙ ЭКРАН
         Column(
             modifier = Modifier
@@ -165,7 +196,20 @@ fun App() {
             TableControlPanel({
                 createTableVisible = true
             }, {
+                scope.launch {
+                    try {
+                        val tables = getTables().mapNotNull { table ->
+                            table.jsonObject["table_name"]
+                                ?.jsonPrimitive
+                                ?.content
+                        }
 
+                        editDialogTables = tables
+                    } catch (e: Exception) {
+                        isToastVisible = true
+                        toastMessage = e.message ?: "Ошибка загрузки таблиц"
+                    }
+                }
             }, {
 
             }, {
