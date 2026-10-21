@@ -25,7 +25,9 @@ import com.example.browser_queries_db.ui.dialogs.FieldsDialog
 import com.example.browser_queries_db.ui.components.QuickQueryButtons
 import com.example.browser_queries_db.ui.dialogs.SortDialog
 import com.example.browser_queries_db.ui.components.TableControlPanel
+import com.example.browser_queries_db.ui.components.ToastNotification
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -47,6 +49,9 @@ fun App() {
         var createTableVisible by remember { mutableStateOf(false) }
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
+
+        var isToastVisible by remember { mutableStateOf(false) }
+        var toastMessage by remember { mutableStateOf("") }
 
         val scrollState = rememberScrollState()
         val scope = rememberCoroutineScope()
@@ -126,13 +131,17 @@ fun App() {
             )
         }
 
-        if (createTableVisible){
+        if (createTableVisible) {
             CreateTableDialog(
                 { name, columns ->
                     createTableVisible = false
-                    scope.launch { createTable(name, columns) }
+                    scope.launch {
+                        val response = createTable(name, columns)
+                        isToastVisible = true
+                        toastMessage = response.bodyAsText()
+                    }
                 },
-                onDismiss = { createTableVisible = false}
+                onDismiss = { createTableVisible = false }
             )
         }
 
@@ -147,15 +156,21 @@ fun App() {
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            ToastNotification(message = toastMessage, isToastVisible, {
+                isToastVisible = false
+                toastMessage = ""
+            }
+            )
+
             TableControlPanel({
-                    createTableVisible = true
-                }, {
+                createTableVisible = true
+            }, {
 
-                }, {
+            }, {
 
-                }, {
+            }, {
 
-                }
+            }
             )
 
             QuickQueryButtons(
