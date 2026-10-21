@@ -156,6 +156,38 @@ class TableRepository {
     }
 
     /**
+     * Получает список всех таблиц схемы public.
+     * Системные таблицы и представления не возвращаются.
+     *
+     * @return список имён таблиц в алфавитном порядке.
+     */
+    fun getTableNames(): List<String> {
+
+        val sql = """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+        """.trimIndent()
+
+        createConnection().use { connection ->
+
+            connection.prepareStatement(sql).use { statement ->
+
+                statement.executeQuery().use { resultSet ->
+
+                    return buildList {
+
+                        while (resultSet.next()) {
+                            add(resultSet.getString("table_name"))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Читает данные из таблицы с динамическим набором колонок.
      * Имена таблицы и колонок приходят уже провалидированными из TableService
      * и оборачиваются в кавычки; значения сортировки не подставляются извне.

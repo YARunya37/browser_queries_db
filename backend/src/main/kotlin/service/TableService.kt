@@ -55,6 +55,20 @@ class TableService(
     }
 
     /**
+     * Возвращает список всех таблиц схемы public.
+     * Системные таблицы и представления не возвращаются.
+     *
+     * @return JsonArray, где каждый элемент — объект с именем таблицы.
+     */
+    fun getTableNames(): JsonArray {
+        return toJsonArray(
+            tableRepository.getTableNames().map { tableName ->
+                mapOf("table_name" to tableName)
+            }
+        )
+    }
+
+    /**
      * Изменяет структуру таблицы по списку колонок (операции add/drop/alter).
      * Проверяет имя таблицы, колонки, действия и переводит типы в SQL-типы.
      *

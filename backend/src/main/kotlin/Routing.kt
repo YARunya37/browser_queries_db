@@ -17,6 +17,24 @@ fun Application.configureRouting(
             call.respondText("Hello, World!")
         }
 
+        // READ — получение списка всех таблиц
+        get("/tables") {
+
+            try {
+
+                val tables = tableService.getTableNames()
+
+                call.respond(tables)
+
+            } catch (e: SQLException) {
+
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    e.message ?: "Database error"
+                )
+            }
+        }
+
         // Базовый маршрут для DDL-команд над таблицей.
         // {table_name} — имя таблицы, над которой выполняется операция
         route("/tables/{table_name}") {
