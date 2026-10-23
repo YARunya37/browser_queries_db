@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.TableQuery
 import com.example.browser_queries_db.ui.components.ControlContentPanel
 import com.example.browser_queries_db.ui.components.DatabaseTable
+import com.example.browser_queries_db.ui.components.TableEditor
 import com.example.browser_queries_db.ui.dialogs.FieldsDialog
 import com.example.browser_queries_db.ui.components.QuickQueryButtons
 import com.example.browser_queries_db.ui.dialogs.SortDialog
@@ -61,6 +62,8 @@ fun App() {
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
 
+        var editMode by remember { mutableStateOf(false) }
+
         var isToastVisible by remember { mutableStateOf(false) }
         var toastMessage by remember { mutableStateOf("") }
 
@@ -72,6 +75,7 @@ fun App() {
         suspend fun showTable(tableName: String) {
             currentTableName = tableName
             currentQuery = TableQuery()
+            editMode = false
             headers = null
             rows = null
 
@@ -87,6 +91,7 @@ fun App() {
         // Локальная функция для вызова запросов к БД
         suspend fun executeQuery(query: TableQuery) {
             currentQuery = query
+            editMode = false
             rows = null
 
             try {
@@ -331,6 +336,9 @@ fun App() {
                 },
                 onSortClick = {
                     sortDialogVisible = true
+                },
+                onEditRowsClick = {
+                    editMode = true
                 }
             )
 
@@ -347,7 +355,27 @@ fun App() {
                 else -> {
                     val rowData = rows!!
 
-                    DatabaseTable(rowData)
+                    val headerColumns = headers!!.mapNotNull { header ->
+                        header.jsonObject["column_name"]
+                            ?.jsonPrimitive
+                            ?.content
+                    }
+
+                    if (editMode) {
+                        TableEditor(
+                            rows = rowData,
+                            columns = headerColumns,
+                            onCancel = {
+                                editMode = false
+
+                                scope.launch {
+                                    executeQuery(currentQuery)
+                                }
+                            }
+                        )
+                    } else {
+                        DatabaseTable(rowData)
+                    }
                 }
             }
         }
