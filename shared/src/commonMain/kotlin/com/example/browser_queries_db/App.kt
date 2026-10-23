@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.TableQuery
+import com.example.browser_queries_db.ui.components.ControlContentPanel
 import com.example.browser_queries_db.ui.components.DatabaseTable
 import com.example.browser_queries_db.ui.dialogs.FieldsDialog
 import com.example.browser_queries_db.ui.components.QuickQueryButtons
@@ -319,7 +320,7 @@ fun App() {
                 textAlign = TextAlign.Center
             )
 
-            TableControlPanel(
+            ControlContentPanel(
                 onReset = {
                     scope.launch {
                         executeQuery(TableQuery())
