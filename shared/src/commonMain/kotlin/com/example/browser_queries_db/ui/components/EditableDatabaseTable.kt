@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -170,9 +171,15 @@ fun EditableDatabaseTable(
             if (onAddRow != null) {
                 OutlinedButton(
                     onClick = onAddRow,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )   
                 ) {
-                    Text("Добавить строку")
+                    Text("Добавить строку", style = MaterialTheme.typography.bodyMediumEmphasized)
                 }
             }
         }
