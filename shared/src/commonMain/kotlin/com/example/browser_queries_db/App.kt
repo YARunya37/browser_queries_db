@@ -54,6 +54,8 @@ fun App() {
 
         var showDialogTables by remember { mutableStateOf<List<String>?>(null) }
 
+        var deleteDialogTables by remember { mutableStateOf<List<String>?>(null) }
+
         var currentTableName by remember { mutableStateOf(DEFAULT_TABLE_NAME) }
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
@@ -203,6 +205,36 @@ fun App() {
             )
         }
 
+        if (deleteDialogTables != null) {
+            ChooseTableDialog(
+                tables = deleteDialogTables!!,
+                onDismiss = { deleteDialogTables = null },
+                onConfirm = { tableName ->
+                    deleteDialogTables = null
+
+                    scope.launch {
+                        try {
+                            val response = deleteTable(tableName)
+
+                            isToastVisible = true
+                            toastMessage = if (response.status.value in 200..299) {
+                                "Таблица удалена"
+                            } else {
+                                response.bodyAsText()
+                            }
+
+                            if (tableName == currentTableName) {
+                                showTable(DEFAULT_TABLE_NAME)
+                            }
+                        } catch (e: Exception) {
+                            isToastVisible = true
+                            toastMessage = e.message ?: "Ошибка удаления таблицы"
+                        }
+                    }
+                }
+            )
+        }
+
         // ОСНОВНОЙ ЭКРАН
         Column(
             modifier = Modifier
@@ -238,7 +270,20 @@ fun App() {
                     }
                 }
             }, {
+                scope.launch {
+                    try {
+                        val tables = getTables().mapNotNull { table ->
+                            table.jsonObject["table_name"]
+                                ?.jsonPrimitive
+                                ?.content
+                        }.filter { it != DEFAULT_TABLE_NAME }
 
+                        deleteDialogTables = tables
+                    } catch (e: Exception) {
+                        isToastVisible = true
+                        toastMessage = e.message ?: "Ошибка загрузки таблиц"
+                    }
+                }
             }, {
                 scope.launch {
                     try {
