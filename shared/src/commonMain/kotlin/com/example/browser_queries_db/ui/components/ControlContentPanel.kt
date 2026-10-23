@@ -32,12 +32,12 @@ fun ControlContentPanel(
         ) {
             Icon(
                 imageVector = Icons.Default.TableView,
-                contentDescription = "Все сотрудники"
+                contentDescription = "Все записи"
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text("Все сотрудники")
+            Text("Все записи")
         }
 
         Spacer(modifier = Modifier.width(8.dp))
