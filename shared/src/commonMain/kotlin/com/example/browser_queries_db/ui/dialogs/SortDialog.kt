@@ -27,7 +27,7 @@ fun SortDialog(
     onDismiss: () -> Unit,
     onApply: (field: String, direction: String) -> Unit
 ) {
-    var selectedField by remember { mutableStateOf("fio") }
+    var selectedField by remember { mutableStateOf("id") }
     var selectedDirection by remember { mutableStateOf("asc") }
 
     var dropdownExpanded by remember { mutableStateOf(false) }
