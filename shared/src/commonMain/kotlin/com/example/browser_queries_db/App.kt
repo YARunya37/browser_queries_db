@@ -26,9 +26,9 @@ import com.example.browser_queries_db.ui.components.QuickQueryButtons
 import com.example.browser_queries_db.ui.dialogs.SortDialog
 import com.example.browser_queries_db.ui.components.TableControlPanel
 import com.example.browser_queries_db.ui.components.ToastNotification
+import com.example.browser_queries_db.ui.dialogs.ChooseTableDialog
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
 import com.example.browser_queries_db.ui.dialogs.EditTableDialog
-import com.example.browser_queries_db.ui.dialogs.ShowTableDialog
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
@@ -190,10 +190,10 @@ fun App() {
         }
 
         if (showDialogTables != null) {
-            ShowTableDialog(
+            ChooseTableDialog(
                 tables = showDialogTables!!,
                 onDismiss = { showDialogTables = null },
-                onShowTable = { tableName ->
+                onConfirm = { tableName ->
                     showDialogTables = null
 
                     scope.launch {

@@ -15,17 +15,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 @Composable
-fun ShowTableDialog(
+fun ChooseTableDialog(
     tables: List<String>,
     onDismiss: () -> Unit,
-    onShowTable: (String) -> Unit
+    onConfirm: (String) -> Unit
 ) {
     var selectedTable by remember { mutableStateOf(tables.firstOrNull().orEmpty()) }
     var dropdownExpanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Показ таблицы") },
+        title = { Text("Выбор таблицы") },
         text = {
             Column {
                 Text("Таблица:")
@@ -74,10 +74,10 @@ fun ShowTableDialog(
             Button(
                 enabled = selectedTable.isNotBlank(),
                 onClick = {
-                    onShowTable(selectedTable)
+                    onConfirm(selectedTable)
                 }
             ) {
-                Text("Показать")
+                Text("Выбрать")
             }
         },
         dismissButton = {
