@@ -20,6 +20,8 @@ class TableService(
 
     private val allowedActions = setOf("add", "drop", "alter")
 
+    private val protectedTables = setOf("table_kliuchikov")
+
     private val identifierRegex = Regex("^[A-Za-z_][A-Za-z0-9_]{0,62}$")
 
     /**
@@ -103,6 +105,12 @@ class TableService(
      */
     fun dropTable(tableName: String) {
         validateTableName(tableName)
+
+        if (tableName.lowercase() in protectedTables) {
+            throw IllegalArgumentException(
+                "Table '$tableName' cannot be deleted"
+            )
+        }
 
         tableRepository.dropTable(tableName)
     }
