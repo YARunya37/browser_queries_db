@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.browser_queries_db.model.JoinTablesRequest
 import com.example.browser_queries_db.model.TableQuery
 import com.example.browser_queries_db.model.TableRowChanges
 import com.example.browser_queries_db.ui.components.ControlContentPanel
@@ -32,10 +33,14 @@ import com.example.browser_queries_db.ui.components.ToastNotification
 import com.example.browser_queries_db.ui.dialogs.ChooseTableDialog
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
 import com.example.browser_queries_db.ui.dialogs.EditTableDialog
+import com.example.browser_queries_db.ui.dialogs.JoinDialog
+import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -61,6 +66,16 @@ fun App() {
 
         var deleteDialogTables by remember { mutableStateOf<List<String>?>(null) }
 
+        var joinFirstDialogTables by remember { mutableStateOf<List<String>?>(null) }
+
+        var joinSecondDialogTables by remember { mutableStateOf<List<String>?>(null) }
+
+        var joinFirstTable by remember { mutableStateOf<String?>(null) }
+
+        var joinDialogData by remember { mutableStateOf<JoinDialogData?>(null) }
+
+        var joinResultTitle by remember { mutableStateOf<String?>(null) }
+
         var currentTableName by remember { mutableStateOf(DEFAULT_TABLE_NAME) }
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
@@ -81,6 +96,11 @@ fun App() {
             editMode = false
             headers = null
             rows = null
+            joinResultTitle = null
+            joinFirstDialogTables = null
+            joinSecondDialogTables = null
+            joinFirstTable = null
+            joinDialogData = null
 
             try {
                 headers = getTableHeaders(tableName)
@@ -296,6 +316,137 @@ fun App() {
             )
         }
 
+        if (joinFirstDialogTables != null) {
+            ChooseTableDialog(
+                tables = joinFirstDialogTables!!,
+                onDismiss = {
+                    joinFirstDialogTables = null
+                    joinFirstTable = null
+                },
+                onConfirm = { tableName ->
+                    val allTables = joinFirstDialogTables.orEmpty()
+
+                    joinFirstDialogTables = null
+                    joinFirstTable = tableName
+                    joinSecondDialogTables = allTables.filter { it != tableName }
+                }
+            )
+        }
+
+        if (joinSecondDialogTables != null) {
+            ChooseTableDialog(
+                tables = joinSecondDialogTables!!,
+                onDismiss = {
+                    joinSecondDialogTables = null
+                    joinFirstTable = null
+                },
+                onConfirm = { secondTable ->
+                    val firstTable = joinFirstTable
+
+                    joinSecondDialogTables = null
+
+                    if (firstTable == null) {
+                        isToastVisible = true
+                        toastMessage = "Ошибка выбора первой таблицы"
+                        return@ChooseTableDialog
+                    }
+
+                    scope.launch {
+                        try {
+                            val firstColumns = getTableHeaders(firstTable)
+                                .mapNotNull { header ->
+                                    header.jsonObject["column_name"]
+                                        ?.jsonPrimitive
+                                        ?.content
+                                }
+
+                            val secondColumns = getTableHeaders(secondTable)
+                                .mapNotNull { header ->
+                                    header.jsonObject["column_name"]
+                                        ?.jsonPrimitive
+                                        ?.content
+                                }
+
+                            joinDialogData = JoinDialogData(
+                                firstTable = firstTable,
+                                secondTable = secondTable,
+                                firstColumns = firstColumns,
+                                secondColumns = secondColumns
+                            )
+                        } catch (e: Exception) {
+                            isToastVisible = true
+                            toastMessage = e.message
+                                ?: "Ошибка загрузки колонок таблиц"
+                        }
+                    }
+                }
+            )
+        }
+
+        if (joinDialogData != null) {
+            val data = joinDialogData!!
+
+            JoinDialog(
+                firstTable = data.firstTable,
+                secondTable = data.secondTable,
+                firstColumns = data.firstColumns,
+                secondColumns = data.secondColumns,
+                onDismiss = {
+                    joinDialogData = null
+                },
+                onApply = { firstColumn, secondColumn ->
+                    joinDialogData = null
+
+                    scope.launch {
+                        try {
+                            val response = joinTables(
+                                JoinTablesRequest(
+                                    firstTable = data.firstTable,
+                                    secondTable = data.secondTable,
+                                    firstColumn = firstColumn,
+                                    secondColumn = secondColumn
+                                )
+                            )
+
+                            if (response.status.value in 200..299) {
+                                val joinedRows = response.body<JsonArray>()
+
+                                val joinedHeaders = JsonArray(
+                                    joinedRows.firstOrNull()
+                                        ?.jsonObject
+                                        ?.keys
+                                        ?.map { columnName ->
+                                            JsonObject(
+                                                mapOf(
+                                                    "column_name" to JsonPrimitive(
+                                                        columnName
+                                                    )
+                                                )
+                                            )
+                                        }
+                                        .orEmpty()
+                                )
+
+                                headers = joinedHeaders
+                                rows = joinedRows
+                                currentQuery = TableQuery()
+                                editMode = false
+                                error = null
+                                joinResultTitle =
+                                    "${data.firstTable} ⋈ ${data.secondTable}"
+                            } else {
+                                isToastVisible = true
+                                toastMessage = response.bodyAsText()
+                            }
+                        } catch (e: Exception) {
+                            isToastVisible = true
+                            toastMessage = e.message ?: "Ошибка соединения таблиц"
+                        }
+                    }
+                }
+            )
+        }
+
         // ОСНОВНОЙ ЭКРАН
         Column(
             modifier = Modifier
@@ -361,19 +512,47 @@ fun App() {
                         toastMessage = e.message ?: "Ошибка загрузки таблиц"
                     }
                 }
+            }, {
+                scope.launch {
+                    try {
+                        val tables = getTables().mapNotNull { table ->
+                            table.jsonObject["table_name"]
+                                ?.jsonPrimitive
+                                ?.content
+                        }
+
+                        if (tables.size < 2) {
+                            isToastVisible = true
+                            toastMessage = "Для соединения нужно минимум две таблицы"
+                        } else {
+                            joinFirstTable = null
+                            joinSecondDialogTables = null
+                            joinDialogData = null
+                            joinFirstDialogTables = tables
+                        }
+                    } catch (e: Exception) {
+                        isToastVisible = true
+                        toastMessage = e.message ?: "Ошибка загрузки таблиц"
+                    }
+                }
             }
             )
 
-            QuickQueryButtons(
-                onQuery = { query ->
-                    scope.launch {
-                        executeQuery(query)
+            // Блок с быстрыми запросами отображаем только если не произвели соединение таблиц
+            if (joinResultTitle == null) {
+                QuickQueryButtons(
+                    onQuery = { query ->
+                        scope.launch {
+                            executeQuery(query)
+                        }
                     }
-                }
-            )
+                )
+            }
 
+            // Заголовок. Разные заголовки в зависимости от того, было ли произведено соединение
             Text(
-                text = "Таблица: $currentTableName",
+                text = joinResultTitle?.let { "Соединение: $it" }
+                    ?: "Таблица: $currentTableName",
                 style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier
                     .padding(vertical = 8.dp)
@@ -381,22 +560,25 @@ fun App() {
                 textAlign = TextAlign.Center
             )
 
-            ControlContentPanel(
-                onReset = {
-                    scope.launch {
-                        executeQuery(TableQuery())
+            // Блок с управлением таблицей отображаем только если не произвели соединение таблиц
+            if (joinResultTitle == null) {
+                ControlContentPanel(
+                    onReset = {
+                        scope.launch {
+                            executeQuery(TableQuery())
+                        }
+                    },
+                    onFieldsClick = {
+                        fieldsDialogVisible = true
+                    },
+                    onSortClick = {
+                        sortDialogVisible = true
+                    },
+                    onEditRowsClick = {
+                        editMode = true
                     }
-                },
-                onFieldsClick = {
-                    fieldsDialogVisible = true
-                },
-                onSortClick = {
-                    sortDialogVisible = true
-                },
-                onEditRowsClick = {
-                    editMode = true
-                }
-            )
+                )
+            }
 
             // Состояние таблицы
             when {
@@ -472,3 +654,10 @@ fun App() {
         }
     }
 }
+
+private data class JoinDialogData(
+    val firstTable: String,
+    val secondTable: String,
+    val firstColumns: List<String>,
+    val secondColumns: List<String>
+)
