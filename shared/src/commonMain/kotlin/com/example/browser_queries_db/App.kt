@@ -20,8 +20,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.TableQuery
+import com.example.browser_queries_db.model.TableRowChanges
 import com.example.browser_queries_db.ui.components.ControlContentPanel
 import com.example.browser_queries_db.ui.components.DatabaseTable
+import com.example.browser_queries_db.ui.components.TableEditor
 import com.example.browser_queries_db.ui.dialogs.FieldsDialog
 import com.example.browser_queries_db.ui.components.QuickQueryButtons
 import com.example.browser_queries_db.ui.dialogs.SortDialog
@@ -30,7 +32,9 @@ import com.example.browser_queries_db.ui.components.ToastNotification
 import com.example.browser_queries_db.ui.dialogs.ChooseTableDialog
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
 import com.example.browser_queries_db.ui.dialogs.EditTableDialog
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -61,6 +65,8 @@ fun App() {
 
         var currentQuery by remember { mutableStateOf(TableQuery()) }
 
+        var editMode by remember { mutableStateOf(false) }
+
         var isToastVisible by remember { mutableStateOf(false) }
         var toastMessage by remember { mutableStateOf("") }
 
@@ -72,6 +78,7 @@ fun App() {
         suspend fun showTable(tableName: String) {
             currentTableName = tableName
             currentQuery = TableQuery()
+            editMode = false
             headers = null
             rows = null
 
@@ -87,6 +94,7 @@ fun App() {
         // Локальная функция для вызова запросов к БД
         suspend fun executeQuery(query: TableQuery) {
             currentQuery = query
+            editMode = false
             rows = null
 
             try {
@@ -95,6 +103,58 @@ fun App() {
                 error = null
             } catch (e: Exception) {
                 error = e.message
+            }
+        }
+
+        // Применяет изменения строк через API: удаление, изменение, добавление.
+        // Ошибочная строка не останавливает обработку остальных: ошибки ответа
+        // и исключения API собираются и показываются после завершения.
+        suspend fun saveRowChanges(
+            tableName: String,
+            changes: TableRowChanges
+        ) {
+            val errors = mutableListOf<String>()
+
+            suspend fun performRequest(
+                action: String,
+                request: suspend () -> HttpResponse
+            ) {
+                try {
+                    val response = request()
+
+                    if (response.status.value !in 200..299) {
+                        val detail = response.bodyAsText()
+                            .ifBlank { "HTTP ${response.status.value}" }
+
+                        errors += "$action: $detail"
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    errors += "$action: ${e.message ?: "Ошибка запроса"}"
+                }
+            }
+
+            for (id in changes.deletedRowIds) {
+                performRequest("Удаление строки $id") {
+                    deleteRow(tableName, id)
+                }
+            }
+
+            for (row in changes.updatedRows) {
+                performRequest("Изменение строки ${row.id}") {
+                    updateRow(tableName, row.id, row.values)
+                }
+            }
+
+            for (values in changes.addedRows) {
+                performRequest("Добавление строки") {
+                    addRow(tableName, values)
+                }
+            }
+
+            if (errors.isNotEmpty()) {
+                throw IllegalStateException(errors.joinToString("\n"))
             }
         }
 
@@ -250,7 +310,8 @@ fun App() {
             ToastNotification(message = toastMessage, isToastVisible, {
                 isToastVisible = false
                 toastMessage = ""
-            }
+            },
+                durationMillis = 10000
             )
 
             TableControlPanel({
@@ -331,6 +392,9 @@ fun App() {
                 },
                 onSortClick = {
                     sortDialogVisible = true
+                },
+                onEditRowsClick = {
+                    editMode = true
                 }
             )
 
@@ -347,7 +411,62 @@ fun App() {
                 else -> {
                     val rowData = rows!!
 
-                    DatabaseTable(rowData)
+                    val headerColumns = headers!!.mapNotNull { header ->
+                        header.jsonObject["column_name"]
+                            ?.jsonPrimitive
+                            ?.content
+                    }
+
+                    if (editMode) {
+                        TableEditor(
+                            rows = rowData,
+                            columns = headerColumns,
+                            onCancel = {
+                                editMode = false
+
+                                scope.launch {
+                                    executeQuery(currentQuery)
+                                }
+                            },
+                            onSave = { changes ->
+                                val tableName = currentTableName
+                                val query = currentQuery
+
+                                var toast: String? = null
+
+                                try {
+                                    saveRowChanges(tableName, changes)
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    toast = e.message ?: "Ошибка сохранения"
+                                }
+
+                                try {
+                                    rows = loadTableRows(tableName, query)
+                                    error = null
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    if (toast == null) {
+                                        toast = e.message
+                                            ?: "Ошибка загрузки таблицы"
+                                    }
+                                }
+
+                                isToastVisible = true
+                                toastMessage = toast ?: if (changes.isEmpty) {
+                                    "Нет изменений"
+                                } else {
+                                    "Изменения сохранены"
+                                }
+
+                                editMode = false
+                            }
+                        )
+                    } else {
+                        DatabaseTable(rowData)
+                    }
                 }
             }
         }

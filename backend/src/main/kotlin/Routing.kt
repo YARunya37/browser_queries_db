@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.model.RowValuesRequest
 import com.example.model.TableColumnsRequest
 import com.example.service.TableService
 import io.ktor.http.HttpStatusCode
@@ -206,6 +207,147 @@ fun Application.configureRouting(
                     )
 
                     call.respond(rows)
+
+                } catch (e: IllegalArgumentException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Bad request"
+                    )
+
+                } catch (e: SQLException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Database error"
+                    )
+                }
+            }
+
+            // CREATE — добавление строки в таблицу.
+            // Тело запроса: значения колонок, пустые значения пропускаются
+            post("/rows") {
+
+                val tableName = call.parameters["table_name"]
+                    ?: return@post call.respond(
+                        HttpStatusCode.BadRequest,
+                        "table_name is required"
+                    )
+
+                val request = call.receive<RowValuesRequest>()
+
+                try {
+
+                    tableService.addRow(
+                        tableName = tableName,
+                        values = request.values
+                    )
+
+                    call.respond(
+                        HttpStatusCode.Created,
+                        "Row added to '$tableName'"
+                    )
+
+                } catch (e: IllegalArgumentException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Bad request"
+                    )
+
+                } catch (e: SQLException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Database error"
+                    )
+                }
+            }
+
+            // UPDATE — изменение строки по её id.
+            // Тело запроса: значения колонок, пустые значения пропускаются
+            patch("/rows/{row_id}") {
+
+                val tableName = call.parameters["table_name"]
+                    ?: return@patch call.respond(
+                        HttpStatusCode.BadRequest,
+                        "table_name is required"
+                    )
+
+                val rowId = call.parameters["row_id"]?.toLongOrNull()
+                    ?: return@patch call.respond(
+                        HttpStatusCode.BadRequest,
+                        "row_id must be a number"
+                    )
+
+                val request = call.receive<RowValuesRequest>()
+
+                try {
+
+                    tableService.updateRow(
+                        tableName = tableName,
+                        id = rowId,
+                        values = request.values
+                    )
+
+                    call.respond(
+                        HttpStatusCode.OK,
+                        "Row updated in '$tableName'"
+                    )
+
+                } catch (e: NoSuchElementException) {
+
+                    call.respond(
+                        HttpStatusCode.NotFound,
+                        e.message ?: "Row not found"
+                    )
+
+                } catch (e: IllegalArgumentException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Bad request"
+                    )
+
+                } catch (e: SQLException) {
+
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        e.message ?: "Database error"
+                    )
+                }
+            }
+
+            // DELETE — удаление строки по её id
+            delete("/rows/{row_id}") {
+
+                val tableName = call.parameters["table_name"]
+                    ?: return@delete call.respond(
+                        HttpStatusCode.BadRequest,
+                        "table_name is required"
+                    )
+
+                val rowId = call.parameters["row_id"]?.toLongOrNull()
+                    ?: return@delete call.respond(
+                        HttpStatusCode.BadRequest,
+                        "row_id must be a number"
+                    )
+
+                try {
+
+                    tableService.deleteRow(
+                        tableName = tableName,
+                        id = rowId
+                    )
+
+                    call.respond(HttpStatusCode.NoContent)
+
+                } catch (e: NoSuchElementException) {
+
+                    call.respond(
+                        HttpStatusCode.NotFound,
+                        e.message ?: "Row not found"
+                    )
 
                 } catch (e: IllegalArgumentException) {
 

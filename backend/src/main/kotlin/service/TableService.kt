@@ -158,6 +158,161 @@ class TableService(
     }
 
     /**
+     * Добавляет строку в таблицу.
+     *
+     * Проверяет имя таблицы, наличие таблицы в БД и имена колонок.
+     * Пустые строки и null сохраняются в БД как NULL.
+     *
+     * @param values значения колонок: имя -> значение.
+     * @throws IllegalArgumentException если таблица или колонка некорректны.
+     */
+    fun addRow(
+        tableName: String,
+        values: Map<String, String?>
+    ) {
+        validateTableName(tableName)
+
+        val structure = getValidatedTableStructure(tableName)
+
+        val normalizedValues = validateRowValues(values, structure)
+
+        tableRepository.insertRow(tableName, normalizedValues)
+    }
+
+    /**
+     * Изменяет строку таблицы по идентификатору.
+     *
+     * Проверяет имя таблицы, идентификатор, наличие таблицы и имена колонок.
+     * Пустые строки и null сохраняются в БД как NULL.
+     * Колонку id изменять нельзя.
+     *
+     * @param id идентификатор изменяемой строки.
+     * @param values изменяемые колонки: имя -> новое значение.
+     * @throws IllegalArgumentException если данные некорректны.
+     * @throws NoSuchElementException если строка с указанным id не найдена.
+     */
+    fun updateRow(
+        tableName: String,
+        id: Long,
+        values: Map<String, String?>
+    ) {
+        validateTableName(tableName)
+        validateRowId(id)
+
+        if (values.isEmpty()) {
+            throw IllegalArgumentException("$id: Values cannot be empty")
+        }
+
+        val structure = getValidatedTableStructure(tableName)
+
+        val normalizedValues = validateRowValues(values, structure)
+
+        val updatedRows = tableRepository.updateRow(
+            tableName = tableName,
+            id = id,
+            values = normalizedValues
+        )
+
+        if (updatedRows == 0) {
+            throw NoSuchElementException("Row not found: $id")
+        }
+    }
+
+    /**
+     * Удаляет строку таблицы по идентификатору.
+     *
+     * Проверяет имя таблицы, идентификатор и наличие таблицы в БД.
+     *
+     * @param id идентификатор удаляемой строки.
+     * @throws IllegalArgumentException если имя таблицы или id некорректны.
+     * @throws NoSuchElementException если строка с указанным id не найдена.
+     */
+    fun deleteRow(
+        tableName: String,
+        id: Long
+    ) {
+        validateTableName(tableName)
+        validateRowId(id)
+
+        getValidatedTableStructure(tableName)
+
+        val deletedRows = tableRepository.deleteRow(tableName, id)
+
+        if (deletedRows == 0) {
+            throw NoSuchElementException("Row not found: $id")
+        }
+    }
+
+    /**
+     * Возвращает структуру таблицы или бросает исключение, если таблица не найдена.
+     *
+     * @return список колонок с метаданными из information_schema.
+     * @throws IllegalArgumentException если таблица не найдена.
+     */
+    private fun getValidatedTableStructure(
+        tableName: String
+    ): List<Map<String, Any?>> {
+        val structure = tableRepository.getTableStructure(tableName)
+
+        if (structure.isEmpty()) {
+            throw IllegalArgumentException("Table not found: $tableName")
+        }
+
+        return structure
+    }
+
+    /**
+     * Проверяет и нормализует значения колонок строки.
+     *
+     * Имена колонок сопоставляются с реальными именами без учёта регистра.
+     * Колонка id запрещена, неизвестные и повторяющиеся колонки отклоняются.
+     *
+     * @return значения с реальными именами колонок; пустая строка заменена на null.
+     * @throws IllegalArgumentException если данные некорректны.
+     */
+    private fun validateRowValues(
+        values: Map<String, String?>,
+        structure: List<Map<String, Any?>>
+    ): Map<String, String?> {
+        val columns = structure.mapNotNull { column ->
+            column["column_name"] as? String
+        }
+
+        val normalizedValues = linkedMapOf<String, String?>()
+
+        for ((name, value) in values) {
+            val realName = resolveColumn(name, columns)
+
+            if (realName.equals("id", ignoreCase = true)) {
+                throw IllegalArgumentException(
+                    "Column id cannot be changed"
+                )
+            }
+
+            if (normalizedValues.containsKey(realName)) {
+                throw IllegalArgumentException(
+                    "Duplicate column: $realName"
+                )
+            }
+
+            normalizedValues[realName] = value?.takeIf { it.isNotEmpty() }
+        }
+
+        return normalizedValues
+    }
+
+    /**
+     * Проверяет, что идентификатор строки положительный.
+     *
+     * @throws IllegalArgumentException если id некорректен.
+     */
+    private fun validateRowId(id: Long) {
+        if (id <= 0) {
+            throw IllegalArgumentException("Invalid row id: $id")
+        }
+    }
+
+    /**
      * Проверяет выбираемые поля по реальным колонкам таблицы (без учёта регистра).
      *
      * @return список реальных имён колонок; пустой список означает все колонки (*).

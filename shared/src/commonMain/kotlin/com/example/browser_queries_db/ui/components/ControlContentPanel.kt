@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material.icons.filled.ViewColumn
@@ -20,7 +21,8 @@ import androidx.compose.ui.unit.dp
 fun ControlContentPanel(
     onReset: () -> Unit,
     onFieldsClick: () -> Unit,
-    onSortClick: () -> Unit
+    onSortClick: () -> Unit,
+    onEditRowsClick: () -> Unit
 ) {
     Row {
         Button(
@@ -76,6 +78,25 @@ fun ControlContentPanel(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text("Сортировка")
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Button(
+            onClick = onEditRowsClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Редактировать записи"
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text("Редактировать записи")
         }
     }
 }

@@ -2,6 +2,7 @@ package com.example.repository
 
 import com.example.database.createConnection
 import com.example.model.ColumnDefinition
+import java.sql.PreparedStatement
 
 class TableRepository {
     // TODO: Переименование таблицы/колонны
@@ -250,6 +251,167 @@ class TableRepository {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Добавляет строку в таблицу.
+     *
+     * Имена колонок приходят уже провалидированными из TableService.
+     * Значения передаются через PreparedStatement и приводятся к типу колонки
+     * на стороне БД, поэтому корректно сохраняется текст на русском языке.
+     *
+     * @param values значения колонок: имя -> значение; пустая карта означает
+     *               вставку строки со значениями по умолчанию.
+     */
+    fun insertRow(
+        tableName: String,
+        values: Map<String, String?>
+    ) {
+        val columnTypes = getColumnTypes(tableName)
+
+        val sql = if (values.isEmpty()) {
+            "INSERT INTO ${quote(tableName)} DEFAULT VALUES"
+        } else {
+            val columns = values.keys.toList()
+
+            val quotedColumns = columns.joinToString(", ") { quote(it) }
+
+            val placeholders = columns.joinToString(", ") { column ->
+                buildCastPlaceholder(column, columnTypes)
+            }
+
+            "INSERT INTO ${quote(tableName)} ($quotedColumns) " +
+                    "VALUES ($placeholders)"
+        }
+
+        executePreparedUpdate(sql) { statement ->
+            bindValues(statement, values)
+        }
+    }
+
+    /**
+     * Изменяет строку таблицы по идентификатору.
+     *
+     * Значения передаются через PreparedStatement и приводятся к типу колонки
+     * на стороне БД, что обеспечивает поддержку русского текста.
+     *
+     * @param id идентификатор изменяемой строки.
+     * @param values изменяемые колонки: имя -> новое значение.
+     * @return количество изменённых строк (0, если строка не найдена).
+     * @throws IllegalArgumentException если список значений пуст.
+     */
+    fun updateRow(
+        tableName: String,
+        id: Long,
+        values: Map<String, String?>
+    ): Int {
+        if (values.isEmpty()) {
+            throw IllegalArgumentException("Values cannot be empty")
+        }
+
+        val columnTypes = getColumnTypes(tableName)
+
+        val assignments = values.keys.joinToString(", ") { column ->
+            "${quote(column)} = ${buildCastPlaceholder(column, columnTypes)}"
+        }
+
+        val sql = "UPDATE ${quote(tableName)} " +
+                "SET $assignments " +
+                "WHERE ${quote("id")} = ?"
+
+        return executePreparedUpdate(sql) { statement ->
+            val nextIndex = bindValues(statement, values)
+            statement.setLong(nextIndex, id)
+        }
+    }
+
+    /**
+     * Удаляет строку таблицы по идентификатору.
+     *
+     * @param id идентификатор удаляемой строки.
+     * @return количество удалённых строк (0, если строка не найдена).
+     */
+    fun deleteRow(
+        tableName: String,
+        id: Long
+    ): Int {
+        val sql = "DELETE FROM ${quote(tableName)} " +
+                "WHERE ${quote("id")} = ?"
+
+        return executePreparedUpdate(sql) { statement ->
+            statement.setLong(1, id)
+        }
+    }
+
+    /**
+     * Возвращает соответствие имени колонки и её SQL-типа,
+     * полученное из существующей структуры таблицы.
+     *
+     * @return map имя колонки -> SQL-тип.
+     */
+    private fun getColumnTypes(tableName: String): Map<String, String> {
+        return getTableStructure(tableName).associate { column ->
+            val name = column["column_name"] as String
+            val type = column["data_type"] as String
+
+            name to type
+        }
+    }
+
+    /**
+     * Собирает placeholder с приведением к типу колонки: CAST(? AS ТИП).
+     *
+     * @throws IllegalArgumentException если колонка отсутствует в таблице.
+     */
+    private fun buildCastPlaceholder(
+        column: String,
+        columnTypes: Map<String, String>
+    ): String {
+        val type = columnTypes[column]
+            ?: throw IllegalArgumentException("Unknown column: $column")
+
+        return "CAST(? AS $type)"
+    }
+
+    /**
+     * Связывает значения с параметрами PreparedStatement в порядке колонок.
+     *
+     * @return индекс следующего свободного параметра.
+     * @throws IllegalArgumentException если колонка отсутствует в таблице.
+     */
+    private fun bindValues(
+        statement: PreparedStatement,
+        values: Map<String, String?>,
+    ): Int {
+        var index = 1
+
+        for ((_, value) in values) {
+            // В запросе собирается приведение типа: CAST(? AS TYPE).
+            // Передаём в качестве параметра запроса значение
+            statement.setString(index, value)
+            index++
+        }
+
+        return index
+    }
+
+    /**
+     * Выполняет PreparedStatement-запрос на изменение данных.
+     *
+     * @param bind связывает значения с параметрами запроса.
+     * @return количество изменённых строк.
+     */
+    private fun executePreparedUpdate(
+        sql: String,
+        bind: (PreparedStatement) -> Unit
+    ): Int {
+        createConnection().use { connection ->
+            connection.prepareStatement(sql).use { statement ->
+                bind(statement)
+
+                return statement.executeUpdate()
             }
         }
     }
