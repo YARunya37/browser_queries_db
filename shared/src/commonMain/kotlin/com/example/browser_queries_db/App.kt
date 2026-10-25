@@ -32,7 +32,9 @@ import com.example.browser_queries_db.ui.components.ToastNotification
 import com.example.browser_queries_db.ui.dialogs.ChooseTableDialog
 import com.example.browser_queries_db.ui.dialogs.CreateTableDialog
 import com.example.browser_queries_db.ui.dialogs.EditTableDialog
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -104,45 +106,55 @@ fun App() {
             }
         }
 
-        // Применяет изменения строк через API: удаление, изменение, добавление
+        // Применяет изменения строк через API: удаление, изменение, добавление.
+        // Ошибочная строка не останавливает обработку остальных: ошибки ответа
+        // и исключения API собираются и показываются после завершения.
         suspend fun saveRowChanges(
             tableName: String,
             changes: TableRowChanges
         ) {
-            for (id in changes.deletedRowIds) {
-                val response = deleteRow(tableName, id)
+            val errors = mutableListOf<String>()
 
-                if (response.status.value !in 200..299) {
-                    throw IllegalStateException(
-                        response.bodyAsText().ifBlank {
-                            "Ошибка удаления строки"
-                        }
-                    )
+            suspend fun performRequest(
+                action: String,
+                request: suspend () -> HttpResponse
+            ) {
+                try {
+                    val response = request()
+
+                    if (response.status.value !in 200..299) {
+                        val detail = response.bodyAsText()
+                            .ifBlank { "HTTP ${response.status.value}" }
+
+                        errors += "$action: $detail"
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    errors += "$action: ${e.message ?: "Ошибка запроса"}"
+                }
+            }
+
+            for (id in changes.deletedRowIds) {
+                performRequest("Удаление строки $id") {
+                    deleteRow(tableName, id)
                 }
             }
 
             for (row in changes.updatedRows) {
-                val response = updateRow(tableName, row.id, row.values)
-
-                if (response.status.value !in 200..299) {
-                    throw IllegalStateException(
-                        response.bodyAsText().ifBlank {
-                            "Ошибка изменения строки"
-                        }
-                    )
+                performRequest("Изменение строки ${row.id}") {
+                    updateRow(tableName, row.id, row.values)
                 }
             }
 
             for (values in changes.addedRows) {
-                val response = addRow(tableName, values)
-
-                if (response.status.value !in 200..299) {
-                    throw IllegalStateException(
-                        response.bodyAsText().ifBlank {
-                            "Ошибка добавления строки"
-                        }
-                    )
+                performRequest("Добавление строки") {
+                    addRow(tableName, values)
                 }
+            }
+
+            if (errors.isNotEmpty()) {
+                throw IllegalStateException(errors.joinToString("\n"))
             }
         }
 
@@ -298,7 +310,8 @@ fun App() {
             ToastNotification(message = toastMessage, isToastVisible, {
                 isToastVisible = false
                 toastMessage = ""
-            }
+            },
+                durationMillis = 10000
             )
 
             TableControlPanel({
@@ -423,6 +436,8 @@ fun App() {
 
                                 try {
                                     saveRowChanges(tableName, changes)
+                                } catch (e: CancellationException) {
+                                    throw e
                                 } catch (e: Exception) {
                                     toast = e.message ?: "Ошибка сохранения"
                                 }
@@ -430,6 +445,8 @@ fun App() {
                                 try {
                                     rows = loadTableRows(tableName, query)
                                     error = null
+                                } catch (e: CancellationException) {
+                                    throw e
                                 } catch (e: Exception) {
                                     if (toast == null) {
                                         toast = e.message
