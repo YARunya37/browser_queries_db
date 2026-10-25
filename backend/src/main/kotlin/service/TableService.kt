@@ -22,7 +22,8 @@ class TableService(
 
     private val protectedTables = setOf("table_kliuchikov")
 
-    private val identifierRegex = Regex("^[A-Za-z_\\p{IsCyrillic}][A-Za-z0-9_\\p{IsCyrillic}]{0,62}$")
+    // Ограничение длины строки до 63 символов(ограничение postgre)
+    private val identifierRegex = Regex("^[A-Za-z_\\p{IsCyrillic}][A-Za-z0-9_ \\p{IsCyrillic}]{0,62}$")
 
     /**
      * Создаёт таблицу с указанными колонками.
