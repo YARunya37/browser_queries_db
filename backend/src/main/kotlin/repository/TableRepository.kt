@@ -256,6 +256,74 @@ class TableRepository {
     }
 
     /**
+     * Выполняет INNER JOIN двух таблиц по одной паре колонок.
+     *
+     * Имена таблиц и колонок приходят уже провалидированными из TableService
+     * и оборачиваются в кавычки. Каждая колонка результата получает алиас
+     * "имя_таблицы.имя_колонки", чтобы избежать конфликта одинаковых имён
+     * (например, id в обеих таблицах).
+     *
+     * @param firstColumns все колонки первой таблицы.
+     * @param secondColumns все колонки второй таблицы.
+     * @param firstColumn колонка первой таблицы для условия соединения.
+     * @param secondColumn колонка второй таблицы для условия соединения.
+     * @return список строк: каждая строка — map имя колонки -> значение.
+     */
+    fun selectInnerJoin(
+        firstTable: String,
+        secondTable: String,
+        firstColumns: List<String>,
+        secondColumns: List<String>,
+        firstColumn: String,
+        secondColumn: String
+    ): List<Map<String, Any?>> {
+
+        val sqlFields = buildList {
+            for (column in firstColumns) {
+                add("t1.${quote(column)} AS ${quote("$firstTable.$column")}")
+            }
+
+            for (column in secondColumns) {
+                add("t2.${quote(column)} AS ${quote("$secondTable.$column")}")
+            }
+        }.joinToString(", ")
+
+        val sql = "SELECT $sqlFields " +
+                "FROM ${quote(firstTable)} AS t1 " +
+                "INNER JOIN ${quote(secondTable)} AS t2 " +
+                "ON t1.${quote(firstColumn)} = t2.${quote(secondColumn)}"
+
+        createConnection().use { connection ->
+
+            connection.prepareStatement(sql).use { statement ->
+
+                statement.executeQuery().use { resultSet ->
+
+                    val metadata = resultSet.metaData
+                    val columnCount = metadata.columnCount
+
+                    return buildList {
+
+                        while (resultSet.next()) {
+
+                            val row = buildMap {
+
+                                for (i in 1..columnCount) {
+                                    val columnName = metadata.getColumnLabel(i)
+                                    val value = resultSet.getObject(i)
+                                    put(columnName, value)
+                                }
+                            }
+
+                            add(row)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Добавляет строку в таблицу.
      *
      * Имена колонок приходят уже провалидированными из TableService.
