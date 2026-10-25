@@ -2,6 +2,7 @@ package com.example.service
 
 import com.example.json.toJsonArray
 import com.example.model.ColumnDefinition
+import com.example.model.JoinTablesRequest
 import com.example.repository.TableRepository
 import kotlinx.serialization.json.JsonArray
 
@@ -154,6 +155,57 @@ class TableService(
                 fields = sqlFields,
                 sort = sqlSort,
                 direction = sqlDirection
+            )
+        )
+    }
+
+    /**
+     * Соединяет две таблицы через INNER JOIN по одной паре колонок.
+     *
+     * Проверяет имена таблиц, их различие, наличие таблиц и колонок.
+     * Имена колонок разрешаются без учёта регистра по реальной структуре.
+     *
+     * @return JsonArray, где каждая колонка названа "имя_таблицы.имя_колонки".
+     * @throws IllegalArgumentException если данные некорректны.
+     */
+    fun joinTables(request: JoinTablesRequest): JsonArray {
+        validateTableName(request.firstTable)
+        validateTableName(request.secondTable)
+
+        if (request.firstTable.equals(request.secondTable, ignoreCase = true)) {
+            throw IllegalArgumentException(
+                "Tables must be different: ${request.firstTable}"
+            )
+        }
+
+        val firstColumns = tableRepository.getColumnNames(request.firstTable)
+
+        if (firstColumns.isEmpty()) {
+            throw IllegalArgumentException(
+                "Table not found: ${request.firstTable}"
+            )
+        }
+
+        val secondColumns = tableRepository.getColumnNames(request.secondTable)
+
+        if (secondColumns.isEmpty()) {
+            throw IllegalArgumentException(
+                "Table not found: ${request.secondTable}"
+            )
+        }
+
+        val firstColumn = resolveColumn(request.firstColumn, firstColumns)
+
+        val secondColumn = resolveColumn(request.secondColumn, secondColumns)
+
+        return toJsonArray(
+            tableRepository.selectInnerJoin(
+                firstTable = request.firstTable,
+                secondTable = request.secondTable,
+                firstColumns = firstColumns,
+                secondColumns = secondColumns,
+                firstColumn = firstColumn,
+                secondColumn = secondColumn
             )
         )
     }
