@@ -2,6 +2,7 @@ package com.example.browser_queries_db
 
 import com.example.browser_queries_db.model.ColumnDefinition
 import com.example.browser_queries_db.model.CreateTableRequest
+import com.example.browser_queries_db.model.RowValuesRequest
 import com.example.browser_queries_db.model.TableQuery
 import com.example.browser_queries_db.model.UpdateColumnQuery
 import com.example.browser_queries_db.model.UpdateTableRequest
@@ -80,4 +81,61 @@ suspend fun createTable(tableName:String, columns: List<ColumnDefinition>): Http
 
 suspend fun deleteTable(tableName: String): HttpResponse{
     return httpClient.delete("http://localhost:8080/tables/$tableName")
+}
+
+/**
+ * Добавляет строку в таблицу.
+ *
+ * Пустые строки и null в значениях пропускаются, поэтому для таких колонок
+ * используются значения по умолчанию.
+ *
+ * @param tableName имя таблицы.
+ * @param values значения колонок: имя -> значение.
+ * @return ответ сервера со статусом операции.
+ */
+suspend fun addRow(
+    tableName: String,
+    values: Map<String, String?>
+): HttpResponse {
+    return httpClient.post("http://localhost:8080/tables/$tableName/rows") {
+        contentType(ContentType.Application.Json)
+        setBody(RowValuesRequest(values))
+    }
+}
+
+/**
+ * Изменяет строку таблицы по идентификатору.
+ *
+ * @param tableName имя таблицы.
+ * @param rowId идентификатор изменяемой строки.
+ * @param values изменяемые колонки: имя -> новое значение.
+ * @return ответ сервера со статусом операции.
+ */
+suspend fun updateRow(
+    tableName: String,
+    rowId: Long,
+    values: Map<String, String?>
+): HttpResponse {
+    return httpClient.patch(
+        "http://localhost:8080/tables/$tableName/rows/$rowId"
+    ) {
+        contentType(ContentType.Application.Json)
+        setBody(RowValuesRequest(values))
+    }
+}
+
+/**
+ * Удаляет строку таблицы по идентификатору.
+ *
+ * @param tableName имя таблицы.
+ * @param rowId идентификатор удаляемой строки.
+ * @return ответ сервера со статусом операции.
+ */
+suspend fun deleteRow(
+    tableName: String,
+    rowId: Long
+): HttpResponse {
+    return httpClient.delete(
+        "http://localhost:8080/tables/$tableName/rows/$rowId"
+    )
 }
