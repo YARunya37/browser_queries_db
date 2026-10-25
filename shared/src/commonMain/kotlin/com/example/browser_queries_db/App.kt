@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser_queries_db.model.TableQuery
+import com.example.browser_queries_db.model.TableRowChanges
 import com.example.browser_queries_db.ui.components.ControlContentPanel
 import com.example.browser_queries_db.ui.components.DatabaseTable
 import com.example.browser_queries_db.ui.components.TableEditor
@@ -100,6 +101,48 @@ fun App() {
                 error = null
             } catch (e: Exception) {
                 error = e.message
+            }
+        }
+
+        // Применяет изменения строк через API: удаление, изменение, добавление
+        suspend fun saveRowChanges(
+            tableName: String,
+            changes: TableRowChanges
+        ) {
+            for (id in changes.deletedRowIds) {
+                val response = deleteRow(tableName, id)
+
+                if (response.status.value !in 200..299) {
+                    throw IllegalStateException(
+                        response.bodyAsText().ifBlank {
+                            "Ошибка удаления строки"
+                        }
+                    )
+                }
+            }
+
+            for (row in changes.updatedRows) {
+                val response = updateRow(tableName, row.id, row.values)
+
+                if (response.status.value !in 200..299) {
+                    throw IllegalStateException(
+                        response.bodyAsText().ifBlank {
+                            "Ошибка изменения строки"
+                        }
+                    )
+                }
+            }
+
+            for (values in changes.addedRows) {
+                val response = addRow(tableName, values)
+
+                if (response.status.value !in 200..299) {
+                    throw IllegalStateException(
+                        response.bodyAsText().ifBlank {
+                            "Ошибка добавления строки"
+                        }
+                    )
+                }
             }
         }
 
@@ -371,6 +414,37 @@ fun App() {
                                 scope.launch {
                                     executeQuery(currentQuery)
                                 }
+                            },
+                            onSave = { changes ->
+                                val tableName = currentTableName
+                                val query = currentQuery
+
+                                var toast: String? = null
+
+                                try {
+                                    saveRowChanges(tableName, changes)
+                                } catch (e: Exception) {
+                                    toast = e.message ?: "Ошибка сохранения"
+                                }
+
+                                try {
+                                    rows = loadTableRows(tableName, query)
+                                    error = null
+                                } catch (e: Exception) {
+                                    if (toast == null) {
+                                        toast = e.message
+                                            ?: "Ошибка загрузки таблицы"
+                                    }
+                                }
+
+                                isToastVisible = true
+                                toastMessage = toast ?: if (changes.isEmpty) {
+                                    "Нет изменений"
+                                } else {
+                                    "Изменения сохранены"
+                                }
+
+                                editMode = false
                             }
                         )
                     } else {
