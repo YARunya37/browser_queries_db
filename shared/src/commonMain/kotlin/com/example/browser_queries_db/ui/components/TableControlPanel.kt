@@ -19,6 +19,7 @@ fun TableControlPanel(
     onEditTable: () -> Unit,
     onDeleteTable: () -> Unit,
     onShowTable: () -> Unit,
+    onJoinTables: () -> Unit,
 ) {
 
     Row(
@@ -53,6 +54,13 @@ fun TableControlPanel(
             onClick = onShowTable,
         ) {
             Text(text = "Показать таблицу")
+        }
+
+        // Кнопка соединения двух таблиц
+        Button(
+            onClick = onJoinTables,
+        ) {
+            Text(text = "Соединить таблицы")
         }
 
     }
