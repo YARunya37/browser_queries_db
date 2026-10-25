@@ -2,6 +2,7 @@ package com.example.browser_queries_db
 
 import com.example.browser_queries_db.model.ColumnDefinition
 import com.example.browser_queries_db.model.CreateTableRequest
+import com.example.browser_queries_db.model.JoinTablesRequest
 import com.example.browser_queries_db.model.RowValuesRequest
 import com.example.browser_queries_db.model.TableQuery
 import com.example.browser_queries_db.model.UpdateColumnQuery
@@ -63,6 +64,19 @@ suspend fun loadTableRows(tableName: String, query: TableQuery): JsonArray {
             parameter("direction", it)
         }
     }.body()
+}
+
+/**
+ * Соединяет две таблицы через INNER JOIN по одной паре колонок.
+ *
+ * @param request параметры соединения.
+ * @return ответ сервера с данными соединённой таблицы.
+ */
+suspend fun joinTables(request: JoinTablesRequest): HttpResponse {
+    return httpClient.post("http://localhost:8080/join") {
+        contentType(ContentType.Application.Json)
+        setBody(request)
+    }
 }
 
 suspend fun updateTable(tableName: String, columns: List<UpdateColumnQuery>): HttpResponse{
