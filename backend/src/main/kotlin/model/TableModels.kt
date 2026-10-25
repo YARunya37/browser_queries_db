@@ -17,3 +17,14 @@ data class ColumnDefinition(
 data class TableColumnsRequest(
     val columns: List<ColumnDefinition>
 )
+
+/**
+ * Тело запроса добавления или изменения строки таблицы.
+ *
+ * @property values значения колонок: имя колонки -> значение.
+ *                  Пустая строка или null сохраняются в БД как NULL.
+ */
+@Serializable
+data class RowValuesRequest(
+    val values: Map<String, String?>
+)
