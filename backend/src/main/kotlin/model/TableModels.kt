@@ -28,3 +28,19 @@ data class TableColumnsRequest(
 data class RowValuesRequest(
     val values: Map<String, String?>
 )
+
+/**
+ * Тело запроса INNER JOIN двух таблиц по одной паре колонок.
+ *
+ * @property firstTable первая таблица.
+ * @property secondTable вторая таблица.
+ * @property firstColumn колонка первой таблицы.
+ * @property secondColumn колонка второй таблицы.
+ */
+@Serializable
+data class JoinTablesRequest(
+    val firstTable: String,
+    val secondTable: String,
+    val firstColumn: String,
+    val secondColumn: String
+)
