@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.model.JoinTablesRequest
 import com.example.model.RowValuesRequest
 import com.example.model.TableColumnsRequest
 import com.example.service.TableService
@@ -26,6 +27,33 @@ fun Application.configureRouting(
                 val tables = tableService.getTableNames()
 
                 call.respond(tables)
+
+            } catch (e: SQLException) {
+
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    e.message ?: "Database error"
+                )
+            }
+        }
+
+        // JOIN — соединение двух таблиц по одной паре колонок
+        post("/join") {
+
+            val request = call.receive<JoinTablesRequest>()
+
+            try {
+
+                val rows = tableService.joinTables(request)
+
+                call.respond(rows)
+
+            } catch (e: IllegalArgumentException) {
+
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    e.message ?: "Bad request"
+                )
 
             } catch (e: SQLException) {
 
